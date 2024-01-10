@@ -21,7 +21,8 @@ function import_roof_gauss(filename::String)
     elements["Γᵗ"] = getElements(nodes, entities["Γᵗ"], type, integrationOrder, sp, normal = true)
     elements["Γˡ"] = getElements(nodes, entities["Γˡ"], type, integrationOrder, sp, normal = true)
     elements["𝐴"] = getElements(nodes, entities["𝐴"], type, integrationOrder, sp)
-    push!(elements["Ω"], :𝑠=>:∂²𝝭∂x², :𝑠=>:∂²𝝭∂x∂y, :𝑠=>:∂²𝝭∂y²)
+    push!(elements["Ω"], :∂²𝝭∂x²=>:𝑠, :∂²𝝭∂x∂y=>:𝑠, :∂²𝝭∂y²=>:𝑠)
+    push!(elements["Ω"], :𝗠=>(0,zeros()))
 
     gmsh.finalize()
     return elements, nodes
