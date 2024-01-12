@@ -3,7 +3,7 @@ using ApproxOperator
 import BenchmarkExample: BenchmarkExample
 
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 10
+ndiv = 51
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*25/ndiv*ones(nₚ)
@@ -53,9 +53,9 @@ prescribe!(elements["Γᵇ"],:g₃=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵇ"],:n₁₁=>(ξ¹,ξ²,ξ³)->1.0)
 prescribe!(elements["Γᵇ"],:n₁₂=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵇ"],:n₁₃=>(ξ¹,ξ²,ξ³)->0.0)
-prescribe!(elements["Γᵇ"],:n₂₂=>(ξ¹,ξ²,ξ³)->1.0)
+prescribe!(elements["Γᵇ"],:n₂₂=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵇ"],:n₂₃=>(ξ¹,ξ²,ξ³)->0.0)
-prescribe!(elements["Γᵇ"],:n₃₃=>(ξ¹,ξ²,ξ³)->0.0)
+prescribe!(elements["Γᵇ"],:n₃₃=>(ξ¹,ξ²,ξ³)->1.0)
 prescribe!(elements["Γᵗ"],:g₁=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵗ"],:g₂=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵗ"],:g₃=>(ξ¹,ξ²,ξ³)->0.0)

@@ -1,5 +1,5 @@
 
 import BenchmarkExample: BenchmarkExample
 
-n = 11
+n = 51
 BenchmarkExample.ScordelisLoRoof.generateMsh("./msh/scordelislo_"*string(n)*".msh", transfinite = n)
