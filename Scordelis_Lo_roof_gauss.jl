@@ -16,16 +16,11 @@ E = BenchmarkExample.ScordelisLoRoof.𝐸
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
-set𝝭!(elements["Ω"])
-set∇𝝭!(elements["Ω"])
 set∇²𝝭!(elements["Ω"])
-set𝝭!(elements["Ω"])
 set𝝭!(elements["Γᵇ"])
 set𝝭!(elements["Γʳ"])
-set𝝭!(elements["Γᵗ"])
 set∇𝝭!(elements["Γᵗ"])
-set𝝭!(elements["Γˡ"])
-set∇𝝭!(elements["Γᵗ"])
+set∇𝝭!(elements["Γˡ"])
 set𝝭!(elements["𝐴"])
 
 prescribe!(elements["Ω"],:a¹¹=>(ξ¹,ξ²,ξ³)->cs.a¹¹(ξ¹,ξ²))

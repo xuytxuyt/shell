@@ -2,7 +2,7 @@
 import Gmsh: gmsh
 
 function import_roof_gauss(filename::String)
-    # gmsh.initialize()
+    gmsh.initialize()
     gmsh.open(filename)
 
     type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
@@ -36,7 +36,7 @@ function import_roof_gauss(filename::String)
     push!(elements["𝐴"], :𝝭=>:𝑠)
     push!(elements["𝐴"], :𝗠=>𝗠)
 
-    # gmsh.finalize()
+    gmsh.finalize()
     return elements, nodes
 end
 
