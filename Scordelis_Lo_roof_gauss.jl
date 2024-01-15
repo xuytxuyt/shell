@@ -1,20 +1,22 @@
-using ApproxOperator
+using ApproxOperator, JLD
 
 import BenchmarkExample: BenchmarkExample
 
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 51
-elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
-nₚ = length(nodes)
-s = 2.5*25/ndiv*ones(nₚ)
-push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
+𝐿 = BenchmarkExample.ScordelisLoRoof.𝐿
 b₃ = BenchmarkExample.ScordelisLoRoof.𝑞
 E = BenchmarkExample.ScordelisLoRoof.𝐸
 ν = BenchmarkExample.ScordelisLoRoof.𝜈
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
+
+ndiv = 11
+elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
+nₚ = length(nodes)
+s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
+push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set∇²𝝭!(elements["Ω"])
 set𝝭!(elements["Γᵇ"])
@@ -105,3 +107,5 @@ d₃ = d[3:3:3*nₚ]
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
 w = ops[5](elements["𝐴"])
+
+@save compress=true "jld/scordelislo_gauss_"*string(ndiv)*".jld" d₁ d₂ d₃

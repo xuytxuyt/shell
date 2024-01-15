@@ -40,6 +40,10 @@ function import_roof_gauss(filename::String)
     return elements, nodes
 end
 
+function import_roof_contour(filename::String)
+
+
+end
 function import_roof_mix(filename::String)
     gmsh.initialize()
     gmsh.open(filename)
