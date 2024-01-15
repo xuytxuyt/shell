@@ -23,7 +23,9 @@ set𝝭!(elements["Ω"])
 set𝝭!(elements["Γᵇ"])
 set𝝭!(elements["Γʳ"])
 set𝝭!(elements["Γᵗ"])
+set∇𝝭!(elements["Γᵗ"])
 set𝝭!(elements["Γˡ"])
+set∇𝝭!(elements["Γᵗ"])
 set𝝭!(elements["𝐴"])
 
 prescribe!(elements["Ω"],:a¹¹=>(ξ¹,ξ²,ξ³)->cs.a¹¹(ξ¹,ξ²))
@@ -65,6 +67,10 @@ prescribe!(elements["Γᵗ"],:n₁₃=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵗ"],:n₂₂=>(ξ¹,ξ²,ξ³)->1.0)
 prescribe!(elements["Γᵗ"],:n₂₃=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γᵗ"],:n₃₃=>(ξ¹,ξ²,ξ³)->0.0)
+prescribe!(elements["Γᵗ"],:a₃₁=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[1])
+prescribe!(elements["Γᵗ"],:a₃₂=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[2])
+prescribe!(elements["Γᵗ"],:a₃₃=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[3])
+prescribe!(elements["Γᵗ"],:θ=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:g₁=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:g₂=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:g₃=>(ξ¹,ξ²,ξ³)->0.0)
@@ -74,10 +80,16 @@ prescribe!(elements["Γˡ"],:n₁₃=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:n₂₂=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:n₂₃=>(ξ¹,ξ²,ξ³)->0.0)
 prescribe!(elements["Γˡ"],:n₃₃=>(ξ¹,ξ²,ξ³)->0.0)
+prescribe!(elements["Γˡ"],:θ=>(ξ¹,ξ²,ξ³)->0.0)
+prescribe!(elements["Γˡ"],:a₃₁=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[1])
+prescribe!(elements["Γˡ"],:a₃₂=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[2])
+prescribe!(elements["Γˡ"],:a₃₃=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(ξ¹,ξ²)[3])
+
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h,),
     Operator{:∫vᵢbᵢdΩ}(),
     Operator{:∫vᵢgᵢdΓ}(:α=>1e9*E),
+    Operator{:∫δθθdΓ}(:α=>1e7*E),
     Operator{:ScordelisLoRoof_𝐴}()
 ]
 k = zeros(3*nₚ,3*nₚ)
@@ -88,6 +100,8 @@ ops[2](elements["Ω"],f)
 ops[3](elements["Γᵇ"],k,f)
 ops[3](elements["Γᵗ"],k,f)
 ops[3](elements["Γˡ"],k,f)
+ops[4](elements["Γᵗ"],k,f)
+ops[4](elements["Γˡ"],k,f)
 
 d = k\f
 d₁ = d[1:3:3*nₚ]
@@ -95,4 +109,4 @@ d₂ = d[2:3:3*nₚ]
 d₃ = d[3:3:3*nₚ]
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-w = ops[4](elements["𝐴"])
+w = ops[5](elements["𝐴"])
