@@ -40,20 +40,24 @@ function import_roof_gauss(filename::String)
     return elements, nodes
 end
 
-function import_roof_contour(filename::String)
-
-
-end
-function import_roof_mix(filename::String)
+function import_roof_mix(filename::String,n)
     gmsh.initialize()
     gmsh.open(filename)
     
     entities = getPhysicalGroups()
-    addEdgeElements(entities["Ω"])
-
     nodes = get𝑿ᵢ()
 
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
+
+    integrationScheme = ([0.5,0.5,0.0,
+                          0.5,0.0,0.5,
+                          0.0,0.5,0.5],[1/3,1/3,1/3])
+    elements["Ωₚ"] = getMacroElementsForTriangles(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n)
+
+    integrationScheme = ([-1.0,0.0,0.0,
+                           0.0,0.0,0.0,
+                           1.0,0.0,0.0],[1/3,4/3,1/3])
+    elements["Γₚ"] = getMacroBoundaryElementsForTriangles(entities["Γ"],entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n)
 
     gmsh.finalize()
     return elements, nodes
