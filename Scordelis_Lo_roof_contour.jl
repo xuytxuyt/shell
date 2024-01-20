@@ -63,4 +63,13 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
     end
 end
 
-surface(xs,ys,zs, color=color, axis=(type=Axis3, azimuth=-0.4π, elevation=0.2π))
+fig = Figure()
+
+ax = Axis3(fig[1, 1])
+
+hidespines!(ax)
+hidedecorations!(ax)
+lines!([Point(0, 0, 25), Point(17.45329251994329,0,25), Point(17.45329251994329, 25, 25), Point(0, 25, 25), Point(0, 0, 25)],color=:black)
+s = surface!(ax,xs,ys,zs, color=color, colormap=:redsblues)
+Colorbar(fig[2, 1], s, vertical = false)
+fig
