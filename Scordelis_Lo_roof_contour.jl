@@ -31,7 +31,8 @@ gmsh.finalize()
 type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
 𝗠 = zeros(21)
 
-d₁, d₂, d₃ = load("jld/scordelislo_gauss"*string(ndiv)*".jld")
+# d₁, d₂, d₃ = load("jld/scordelislo_gauss"*string(ndiv)*".jld")
+d₁, d₂, d₃ = load("jld/scordelislo_mix_"*string(ndiv)*".jld")
 push!(nodes,:d₁=>d₁[2],:d₂=>d₂[2],:d₃=>d₃[2])
 
 ind = 10
@@ -69,7 +70,7 @@ ax = Axis3(fig[1, 1])
 
 hidespines!(ax)
 hidedecorations!(ax)
-lines!([Point(0, 0, 25), Point(17.45329251994329,0,25), Point(17.45329251994329, 25, 25), Point(0, 25, 25), Point(0, 0, 25)],color=:black)
+# lines!([Point(0, 0, 25), Point(17.45329251994329,0,25), Point(17.45329251994329, 25, 25), Point(0, 25, 25), Point(0, 0, 25)],color=:black)
 s = surface!(ax,xs,ys,zs, color=color, colormap=:redsblues)
 Colorbar(fig[2, 1], s, vertical = false)
 fig

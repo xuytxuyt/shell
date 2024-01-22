@@ -71,12 +71,12 @@ ops[10](elements["Γˡ"],kᵛᵛ,fᵛ)
 ops[11](elements["Γᵗ"],kᵛᵛ,fᵛ)
 ops[11](elements["Γˡ"],kᵛᵛ,fᵛ)
 
-k = [kᴺᴺ kᴺᴹ kᴺᵛ;kᴺᴹ' kᴹᴹ kᴹᵛ;kᴺᵛ' kᴹᵛ' kᵛᵛ]
-f = [fᴺ;fᴹ;fᵛ]
-d = k\f
-d₁ = d[15*nᵥ+1:3:end]
-d₂ = d[15*nᵥ+2:3:end]
-d₃ = d[15*nᵥ+3:3:end]
+# k = [kᴺᴺ kᴺᴹ kᴺᵛ;kᴺᴹ' kᴹᴹ kᴹᵛ;kᴺᵛ' kᴹᵛ' kᵛᵛ]
+# f = [fᴺ;fᴹ;fᵛ]
+# d = k\f
+# d₁ = d[15*nᵥ+1:3:end]
+# d₂ = d[15*nᵥ+2:3:end]
+# d₃ = d[15*nᵥ+3:3:end]
 
 # k = [kᴹᴹ kᴹᵛ;kᴹᵛ' kᵛᵛ]
 # f = [fᴹ;fᵛ]
@@ -85,8 +85,14 @@ d₃ = d[15*nᵥ+3:3:end]
 # d₂ = d[9*nᵥ+2:3:end]
 # d₃ = d[9*nᵥ+3:3:end]
 
+# d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + kᴹᵛ'*(kᴹᴹ\kᴹᵛ) + kᵛᵛ)\fᵛ
+# d = (kᴹᵛ'*(kᴹᴹ\kᴹᵛ) + kᵛᵛ)\fᵛ
+d₁ = d[1:3:end]
+d₂ = d[2:3:end]
+d₃ = d[3:3:end]
+
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
 w = ops[12](elements["𝐴"])
 
-println(w)
-@save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
+# println(w)
+# @save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
