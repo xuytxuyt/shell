@@ -70,6 +70,19 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
     end
 end
 
+xs1 = zeros(ind)
+ys1 = zeros(ind)
+zs1 = zeros(ind,ind)
+color1 = zeros(ind)
+for i in 1:ind
+    xs1[i] = -xs[ind-i+1]
+    for j in 1:ind
+        ys1[j] = ys[j]
+        zs1[i,j] = zs[ind-i+1,j]
+        color1[i,j] = color1[ind-i+1,j]
+    end
+end
+
 fig = Figure()
 ax = Axis3(fig[1, 1], aspect = (1, 1, 0.1),azimuth = 0.3*pi, elevation = 0.2*pi)
 

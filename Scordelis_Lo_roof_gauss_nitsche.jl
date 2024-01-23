@@ -12,27 +12,29 @@ E = BenchmarkExample.ScordelisLoRoof.𝐸
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
-ndiv = 11
+ndiv = 64
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
 nₚ = length(nodes)
-s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set∇²𝝭!(elements["Ω"])
-set∇³𝝭!(elements["Γᵇ"])
+set∇̂³𝝭!(elements["Γᵇ"])
 set∇𝝭!(elements["Γʳ"])
-set∇³𝝭!(elements["Γᵗ"])
-set∇³𝝭!(elements["Γˡ"])
+set∇̂³𝝭!(elements["Γᵗ"])
+set∇̂³𝝭!(elements["Γˡ"])
 set𝝭!(elements["𝐴"])
 
 eval(prescribleBoundary)
 
+αᵥ = 1e5
+αᵣ = 1e3
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
     Operator{:∫vᵢbᵢdΩ}(),
-    Operator{:∫𝒏𝑵𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>1e9*E),
-    Operator{:∫∇𝑴𝒏𝒂₃𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>1e9*E),
-    Operator{:∫MₙₙθₙdΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>1e7*E),
+    Operator{:∫𝒏𝑵𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>αᵥ*E),
+    Operator{:∫∇𝑴𝒏𝒂₃𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>αᵥ*E),
+    Operator{:∫MₙₙθₙdΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h,:α=>αᵣ*E),
     Operator{:ScordelisLoRoof_𝐴}()
 ]
 k = zeros(3*nₚ,3*nₚ)

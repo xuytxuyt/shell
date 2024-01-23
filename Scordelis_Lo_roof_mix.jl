@@ -55,6 +55,7 @@ fᴺ = zeros(6*nᵥ)
 fᴹ = zeros(9*nᵥ)
 fᵛ = zeros(3*nₚ)
 
+# ops[1](elements["Ωₚ"][1:1],kᴺᴺ)
 ops[1](elements["Ωₚ"],kᴺᴺ)
 ops[2](elements["Ωₚ"],kᴹᴹ)
 ops[3](elements["Γₚ"],elements["Γ"],kᴺᵛ)
@@ -89,4 +90,4 @@ push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
 w = ops[12](elements["𝐴"])
 
 println(w)
-@save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
+# @save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃

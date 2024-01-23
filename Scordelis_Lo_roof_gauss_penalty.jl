@@ -15,7 +15,7 @@ cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 ndiv = 11
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
 nₚ = length(nodes)
-s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set∇²𝝭!(elements["Ω"])
