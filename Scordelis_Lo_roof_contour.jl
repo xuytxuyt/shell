@@ -26,19 +26,22 @@ sp = RegularGrid(x,y,z,n = 3,γ = 5)
 nₚ = length(nodes)
 s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
-gmsh.finalize()
+# gmsh.finalize()
 
 type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
 𝗠 = zeros(21)
 
-# d₁, d₂, d₃ = load("jld/scordelislo_gauss"*string(ndiv)*".jld")
-d₁, d₂, d₃ = load("jld/scordelislo_mix_"*string(ndiv)*".jld")
+d₁, d₂, d₃ = load("jld/scordelislo_gauss_"*string(ndiv)*".jld")
+# d₁, d₂, d₃ = load("jld/scordelislo_mix_"*string(ndiv)*".jld")
 push!(nodes,:d₁=>d₁[2],:d₂=>d₂[2],:d₃=>d₃[2])
 
-ind = 10
+ind = 11
 xs = zeros(ind)
+x₂ = zeros(ind)
 ys = zeros(ind)
+y₂ = zeros(ind)
 zs = zeros(ind,ind)
+z₂ = zeros(ind,ind)
 color = zeros(ind,ind)
 for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
     for (J,ξ²) in enumerate(LinRange(0.0, 𝐿/2, ind))
@@ -57,20 +60,27 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
             u₂ += N[i]*xᵢ.d₂
             u₃ += N[i]*xᵢ.d₃
         end
-        xs[I] = 𝑅*sin(ξ¹/𝑅) + α*u₁
+        xs[I] = 𝑅*sin(ξ¹/𝑅) 
+        x₂[I] = 𝑅*sin(ξ¹/𝑅-𝜃)
         ys[J] = ξ² + α*u₂
+        y₂[J] = 50-ξ² - α*u₂
         zs[I,J] = 𝑅*cos(ξ¹/𝑅) + α*u₃
-        color[I,J] = u₃
+        z₂[I,J] = 𝑅*cos(𝜃-ξ¹/𝑅) + α*u₃
+        color[I,J] =u₃
     end
 end
 
 fig = Figure()
+ax = Axis3(fig[1, 1], aspect = (1, 1, 0.1),azimuth = 0.3*pi, elevation = 0.2*pi)
 
-ax = Axis3(fig[1, 1])
-
-hidespines!(ax)
-hidedecorations!(ax)
-# lines!([Point(0, 0, 25), Point(17.45329251994329,0,25), Point(17.45329251994329, 25, 25), Point(0, 25, 25), Point(0, 0, 25)],color=:black)
+# hidespines!(ax)
+# hidedecorations!(ax)
 s = surface!(ax,xs,ys,zs, color=color, colormap=:redsblues)
+surface!(ax,x₂,ys,z₂, color=color, colormap=:redsblues)
+surface!(ax,xs,y₂,zs, color=color, colormap=:redsblues)
+surface!(ax,x₂,y₂,zs, color=color, colormap=:redsblues)
+lines!([Point(16.0696902421634,0,19.15111107412126),Point(16.0696902421634,50,19.15111107412126)],color=:black)
+lines!([Point(-16.0696902421634,0,19.15111107412126),Point(-16.0696902421634,50,19.15111107412126)],color=:black)
 Colorbar(fig[2, 1], s, vertical = false)
+
 fig
