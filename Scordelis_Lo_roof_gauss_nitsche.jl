@@ -12,7 +12,7 @@ E = BenchmarkExample.ScordelisLoRoof.𝐸
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
-ndiv = 64
+ndiv = 16
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
