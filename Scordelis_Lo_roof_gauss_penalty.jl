@@ -39,19 +39,21 @@ f = zeros(3*nₚ)
 ops[1](elements["Ω"],k)
 ops[2](elements["Ω"],f)
 
-for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
-    for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+# for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+#     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+for (i,αᵥ) in enumerate([1e9])
+    for (j,αᵣ) in enumerate([1e5])
         opΓ = [
             Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
             Operator{:∫δθθdΓ}(:α=>αᵣ*E)
         ]
         kᵅ = zeros(3*nₚ,3*nₚ)
         fᵅ = zeros(3*nₚ)
-        ops[3](elements["Γᵇ"],kᵅ,fᵅ)
-        ops[3](elements["Γᵗ"],kᵅ,fᵅ)
-        ops[3](elements["Γˡ"],kᵅ,fᵅ)
-        ops[4](elements["Γᵗ"],kᵅ,fᵅ)
-        ops[4](elements["Γˡ"],kᵅ,fᵅ)
+        opΓ[1](elements["Γᵇ"],kᵅ,fᵅ)
+        opΓ[1](elements["Γᵗ"],kᵅ,fᵅ)
+        opΓ[1](elements["Γˡ"],kᵅ,fᵅ)
+        opΓ[2](elements["Γᵗ"],kᵅ,fᵅ)
+        opΓ[2](elements["Γˡ"],kᵅ,fᵅ)
 
         d = (k+kᵅ)\(f+fᵅ)
         d₁ = d[1:3:3*nₚ]
@@ -59,10 +61,9 @@ for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e
         d₃ = d[3:3:3*nₚ]
 
         push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-        w = ops[5](elements["𝐴"])
+        w = ops[3](elements["𝐴"])
 
         println(w)
+        @save compress=true "jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
     end
 end
-
-# @save compress=true "jld/scordelislo_gauss_"*string(ndiv)*".jld" d₁ d₂ d₃

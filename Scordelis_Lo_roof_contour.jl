@@ -13,7 +13,7 @@ h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
 ndiv = 16
-α = 10.0
+α = 20.0
 
 ## import nodes
 gmsh.initialize()
@@ -24,32 +24,35 @@ y = nodes.y
 z = nodes.z
 sp = RegularGrid(x,y,z,n = 3,γ = 5)
 nₚ = length(nodes)
-s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 # gmsh.finalize()
 
-type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
-𝗠 = zeros(21)
+# type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
+# 𝗠 = zeros(21)
+type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
+𝗠 = zeros(55)
 
-d₁, d₂, d₃ = load("jld/scordelislo_gauss_"*string(ndiv)*".jld")
+d₁, d₂, d₃ = load("jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld")
+# d₁, d₂, d₃ = load("jld/scordelislo_gauss_nitsche_"*string(ndiv)*".jld")
 # d₁, d₂, d₃ = load("jld/scordelislo_mix_"*string(ndiv)*".jld")
 push!(nodes,:d₁=>d₁[2],:d₂=>d₂[2],:d₃=>d₃[2])
 
-ind = 11
-xs1 = zeros(ind)
-ys1 = zeros(ind)
+ind = 21
+xs1 = zeros(ind,ind)
+ys1 = zeros(ind,ind)
 zs1 = zeros(ind,ind)
 cs1 = zeros(ind,ind)
-xs2 = zeros(ind)
-ys2 = zeros(ind)
+xs2 = zeros(ind,ind)
+ys2 = zeros(ind,ind)
 zs2 = zeros(ind,ind)
 cs2 = zeros(ind,ind)
-xs3 = zeros(ind)
-ys3 = zeros(ind)
+xs3 = zeros(ind,ind)
+ys3 = zeros(ind,ind)
 zs3 = zeros(ind,ind)
 cs3 = zeros(ind,ind)
-xs4 = zeros(ind)
-ys4 = zeros(ind)
+xs4 = zeros(ind,ind)
+ys4 = zeros(ind,ind)
 zs4 = zeros(ind,ind)
 cs4 = zeros(ind,ind)
 xl₁ = zeros(ind)
@@ -93,10 +96,10 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
             u₂ += N[i]*xᵢ.d₂
             u₃ += N[i]*xᵢ.d₃
         end
-        xs1[I] = 𝑅*sin(ξ¹/𝑅)
-        ys1[J] = ξ²
-        zs1[I,J] = 𝑅*cos(ξ¹/𝑅)
-        cs1[I,J] = u₂
+        xs1[I,J] = 𝑅*sin(ξ¹/𝑅) + α*u₁
+        ys1[I,J] = ξ² + α*u₂
+        zs1[I,J] = 𝑅*cos(ξ¹/𝑅) + α*u₃
+        cs1[I,J] = u₃
         xl₂[J] = 𝑅*sin(𝜃)
         yl₂[J] = ξ²
         zl₂[J] = 𝑅*cos(𝜃)
@@ -126,16 +129,16 @@ end
 
 for I in 1:ind
     for J in 1:ind
-        xs2[I] = -xs1[ind-I+1]
-        ys2[J] = ys1[J]
+        xs2[I,J] = -xs1[ind-I+1,J]
+        ys2[I,J] = ys1[ind-I+1,J]
         zs2[I,J] = zs1[ind-I+1,J]
         cs2[I,J] = cs1[ind-I+1,J]
-        xs3[I] = -xs1[ind-I+1]
-        ys3[J] = 𝐿-ys1[ind-J+1]
+        xs3[I,J] = -xs1[ind-I+1,ind-J+1]
+        ys3[I,J] = 𝐿-ys1[ind-I+1,ind-J+1]
         zs3[I,J] = zs1[ind-I+1,ind-J+1]
         cs3[I,J] = cs1[ind-I+1,ind-J+1]
-        xs4[I] = xs1[I]
-        ys4[J] = 𝐿-ys1[ind-J+1]
+        xs4[I,J] = xs1[I,ind-J+1]
+        ys4[I,J] = 𝐿-ys1[I,ind-J+1]
         zs4[I,J] = zs1[I,ind-J+1]
         cs4[I,J] = cs1[I,ind-J+1]
     end
