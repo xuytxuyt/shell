@@ -12,7 +12,7 @@ E = BenchmarkExample.ScordelisLoRoof.𝐸
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
-ndiv = 11
+ndiv = 16
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
@@ -30,29 +30,39 @@ eval(prescribleBoundary)
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
     Operator{:∫vᵢbᵢdΩ}(),
-    Operator{:∫vᵢgᵢdΓ}(:α=>1e9*E),
-    Operator{:∫δθθdΓ}(:α=>1e7*E),
     Operator{:ScordelisLoRoof_𝐴}()
 ]
+
 k = zeros(3*nₚ,3*nₚ)
 f = zeros(3*nₚ)
 
 ops[1](elements["Ω"],k)
 ops[2](elements["Ω"],f)
-ops[3](elements["Γᵇ"],k,f)
-ops[3](elements["Γᵗ"],k,f)
-ops[3](elements["Γˡ"],k,f)
-ops[4](elements["Γᵗ"],k,f)
-ops[4](elements["Γˡ"],k,f)
 
-d = k\f
-d₁ = d[1:3:3*nₚ]
-d₂ = d[2:3:3*nₚ]
-d₃ = d[3:3:3*nₚ]
+for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+    for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+        opΓ = [
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
+            Operator{:∫δθθdΓ}(:α=>αᵣ*E)
+        ]
+        kᵅ = zeros(3*nₚ,3*nₚ)
+        fᵅ = zeros(3*nₚ)
+        ops[3](elements["Γᵇ"],kᵅ,fᵅ)
+        ops[3](elements["Γᵗ"],kᵅ,fᵅ)
+        ops[3](elements["Γˡ"],kᵅ,fᵅ)
+        ops[4](elements["Γᵗ"],kᵅ,fᵅ)
+        ops[4](elements["Γˡ"],kᵅ,fᵅ)
 
-push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-w = ops[5](elements["𝐴"])
+        d = (k+kᵅ)\(f+fᵅ)
+        d₁ = d[1:3:3*nₚ]
+        d₂ = d[2:3:3*nₚ]
+        d₃ = d[3:3:3*nₚ]
 
-println(w)
+        push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
+        w = ops[5](elements["𝐴"])
 
-@save compress=true "jld/scordelislo_gauss_"*string(ndiv)*".jld" d₁ d₂ d₃
+        println(w)
+    end
+end
+
+# @save compress=true "jld/scordelislo_gauss_"*string(ndiv)*".jld" d₁ d₂ d₃
