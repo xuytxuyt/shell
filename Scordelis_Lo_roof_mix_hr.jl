@@ -14,7 +14,7 @@ h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
 nₚ = length(nodes)
-nᵥ = Int(length(elements["Ω"])/8*3)
+nᵥ = Int(length(elements["Ω"])/2*3)
 s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
@@ -45,14 +45,14 @@ ops = [
     Operator{:∫δθθdΓ}(:α=>1e7*E),
     Operator{:ScordelisLoRoof_𝐴}()
 ]
-kᴺᴺ = zeros(6*nᵥ,6*nᵥ)
-kᴹᴹ = zeros(9*nᵥ,9*nᵥ)
-kᴺᴹ = zeros(6*nᵥ,9*nᵥ)
-kᴺᵛ = zeros(6*nᵥ,3*nₚ)
-kᴹᵛ = zeros(9*nᵥ,3*nₚ)
+kᴺᴺ = zeros(3*nᵥ,3*nᵥ)
+kᴹᴹ = zeros(3*nᵥ,3*nᵥ)
+kᴺᴹ = zeros(3*nᵥ,3*nᵥ)
+kᴺᵛ = zeros(3*nᵥ,3*nₚ)
+kᴹᵛ = zeros(3*nᵥ,3*nₚ)
 kᵛᵛ = zeros(3*nₚ,3*nₚ)
-fᴺ = zeros(6*nᵥ)
-fᴹ = zeros(9*nᵥ)
+fᴺ = zeros(3*nᵥ)
+fᴹ = zeros(3*nᵥ)
 fᵛ = zeros(3*nₚ)
 
 ops[1](elements["Ωₚ"],kᴺᴺ)
@@ -71,12 +71,12 @@ ops[10](elements["Γˡ"],kᵛᵛ,fᵛ)
 ops[11](elements["Γᵗ"],kᵛᵛ,fᵛ)
 ops[11](elements["Γˡ"],kᵛᵛ,fᵛ)
 
-# k = [kᴺᴺ kᴺᴹ kᴺᵛ;kᴺᴹ' kᴹᴹ kᴹᵛ;kᴺᵛ' kᴹᵛ' kᵛᵛ]
-# f = [fᴺ;fᴹ;fᵛ]
-# d = k\f
-# d₁ = d[15*nᵥ+1:3:end]
-# d₂ = d[15*nᵥ+2:3:end]
-# d₃ = d[15*nᵥ+3:3:end]
+k = [kᵛᵛ kᴺᵛ' kᴹᵛ';kᴺᵛ kᴺᴺ kᴺᴹ;kᴹᵛ kᴺᴹ' kᴹᴹ]
+f = [fᵛ;fᴺ;fᴹ]
+d = k\f
+d₁ = d[1:3:3*nₚ]
+d₂ = d[2:3:3*nₚ]
+d₃ = d[3:3:3*nₚ]
 
 # k = [kᴹᴹ kᴹᵛ;kᴹᵛ' kᵛᵛ]
 # f = [fᴹ;fᵛ]
@@ -94,5 +94,5 @@ d₃ = d[3:3:end]
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
 w = ops[12](elements["𝐴"])
 
-# println(w)
-# @save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
+println(w)
+@save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
