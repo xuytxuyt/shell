@@ -12,7 +12,7 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 
-ndiv = 64
+ndiv = 11
 elements, nodes = import_Spherical_shell_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
@@ -31,8 +31,7 @@ eval(prescribleBoundary)
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
     Operator{:∫vᵢtᵢdΓ}(),
-    Operator{:SphericalShell_𝐴}(),
-    Operator{:SphericalShell_𝐵}()
+    Operator{:ScordelisLoRoof_𝐴}(),
 ]
 
 k = zeros(3*nₚ,3*nₚ)
@@ -66,10 +65,10 @@ ops[2](elements["𝐵"],f)
 
         push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
         w₁ = ops[3](elements["𝐴"])
-        w₂ = ops[4](elements["𝐵"])
+        w₂ = ops[3](elements["𝐵"])
 
         println(w₁)
         println(w₂)
-        @save compress=true "jld/Spherical_shell_gauss_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
+        # @save compress=true "jld/Spherical_shell_gauss_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
 #     end
 # end
