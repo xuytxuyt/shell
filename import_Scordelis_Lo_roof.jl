@@ -26,7 +26,7 @@ function import_roof_gauss(filename::String)
     gmsh.open(filename)
 
     type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
-    integrationOrder = 8
+    integrationOrder = 1
     nₘ = 55
     entities = getPhysicalGroups()
     nodes = get𝑿ᵢ()
@@ -64,16 +64,18 @@ function import_roof_gauss(filename::String)
     push!(elements["𝐴"], :𝝭=>:𝑠)
     push!(elements["𝐴"], :𝗠=>𝗠)
 
-    # gmsh.finalize()
+    gmsh.finalize()
     return elements, nodes
 end
 
 function import_roof_mix(filename::String,n)
     gmsh.initialize()
     gmsh.open(filename)
+    integrationOrder = 3    
     type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
-    integrationOrder = 8    
     nₘ = 21
+    # type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
+    # nₘ = 55
     entities = getPhysicalGroups()
     nodes = get𝑿ᵢ()
     x = nodes.x
@@ -85,19 +87,19 @@ function import_roof_mix(filename::String,n)
     integrationScheme = ([0.5,0.5,0.0,
                           0.5,0.0,0.5,
                           0.0,0.5,0.5],[1/3,1/3,1/3])
-    # elements["Ωₚ"] = getMacroElementsForTriangles(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n)
-    # elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationScheme, sp)
+    elements["Ωₚ"] = getMacroElements(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n,nₕ=2,nₐ=2)
+    elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationScheme, sp)
 
     integrationScheme = lobatto7
-    elements["Γₚ"] = getMacroBoundaryElements(entities["Γ"],entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n,nₕ=1,nₐ=6)
+    elements["Γₚ"] = getMacroBoundaryElements(entities["Γ"],entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n,nₕ=2,nₐ=6)
     elements["Γ"] = getElements(nodes, entities["Γ"], type, integrationScheme, sp, normal = true)
     elements["Γᵇ"] = getElements(nodes, entities["Γᵇ"], type, integrationScheme, sp, normal = true)
     elements["Γʳ"] = getElements(nodes, entities["Γʳ"], type, integrationScheme, sp, normal = true)
     elements["Γᵗ"] = getElements(nodes, entities["Γᵗ"], type, integrationScheme, sp, normal = true)
     elements["Γˡ"] = getElements(nodes, entities["Γˡ"], type, integrationScheme, sp, normal = true)
 
-    elements["Ωₚ"] = getMacroElements(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationOrder,n,nₕ=1,nₐ=2)
-    elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationOrder, sp)
+    # elements["Ωₚ"] = getMacroElements(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationOrder,n,nₕ=2,nₐ=2)
+    # elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationOrder, sp)
     # elements["Γₚ"] = getMacroBoundaryElementsForTriangles(entities["Γ"],entities["Ω"],PiecewisePolynomial{:Linear2D},integrationOrder,n)
     # elements["Γ"] = getElements(nodes, entities["Γ"], type, integrationOrder, sp, normal = true)
     # elements["Γᵇ"] = getElements(nodes, entities["Γᵇ"], type, integrationOrder, sp, normal = true)
@@ -109,8 +111,11 @@ function import_roof_mix(filename::String,n)
     𝗠 = (0,zeros(nₘ))
     ∂𝗠∂x = (0,zeros(nₘ))
     ∂𝗠∂y = (0,zeros(nₘ))
-    push!(elements["Ω"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠)
-    push!(elements["Ω"], :𝗠=>𝗠, :∂𝗠∂x=>∂𝗠∂x, :∂𝗠∂y=>∂𝗠∂y)
+    ∂²𝗠∂x² = (0,zeros(nₘ))
+    ∂²𝗠∂x∂y = (0,zeros(nₘ))
+    ∂²𝗠∂y² = (0,zeros(nₘ))
+    push!(elements["Ω"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠, :∂²𝝭∂x²=>:𝑠, :∂²𝝭∂x∂y=>:𝑠, :∂²𝝭∂y²=>:𝑠)
+    push!(elements["Ω"], :𝗠=>𝗠, :∂𝗠∂x=>∂𝗠∂x, :∂𝗠∂y=>∂𝗠∂y, :∂²𝗠∂x²=>∂²𝗠∂x², :∂²𝗠∂x∂y=>∂²𝗠∂x∂y, :∂²𝗠∂y²=>∂²𝗠∂y²)
     push!(elements["Ωₚ"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠, :∂²𝝭∂x²=>:𝑠, :∂²𝝭∂x∂y=>:𝑠, :∂²𝝭∂y²=>:𝑠)
     push!(elements["Γ"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠)
     push!(elements["Γ"], :𝗠=>𝗠, :∂𝗠∂x=>∂𝗠∂x, :∂𝗠∂y=>∂𝗠∂y)

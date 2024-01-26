@@ -13,7 +13,7 @@ h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
 ndiv = 16
-α = 20.0
+α = 1e1
 
 ## import nodes
 gmsh.initialize()
@@ -33,10 +33,10 @@ push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
 𝗠 = zeros(55)
 
-d₁, d₂, d₃ = load("jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld")
-# d₁, d₂, d₃ = load("jld/scordelislo_gauss_nitsche_"*string(ndiv)*".jld")
-# d₁, d₂, d₃ = load("jld/scordelislo_mix_"*string(ndiv)*".jld")
-push!(nodes,:d₁=>d₁[2],:d₂=>d₂[2],:d₃=>d₃[2])
+# ds = Dict(load("jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld"))
+# ds = Dict(load("jld/scordelislo_gauss_nitsche_"*string(ndiv)*".jld"))
+ds = Dict(load("jld/scordelislo_mix_"*string(ndiv)*".jld"))
+push!(nodes,:d₁=>ds["d₁"],:d₂=>ds["d₂"],:d₃=>ds["d₃"])
 
 ind = 21
 xs1 = zeros(ind,ind)
@@ -55,6 +55,9 @@ xs4 = zeros(ind,ind)
 ys4 = zeros(ind,ind)
 zs4 = zeros(ind,ind)
 cs4 = zeros(ind,ind)
+us = zeros(ind,ind)
+vs = zeros(ind,ind)
+ws = zeros(ind,ind)
 xl₁ = zeros(ind)
 xl₂ = zeros(ind)
 xl₃ = zeros(ind)
@@ -96,6 +99,9 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
             u₂ += N[i]*xᵢ.d₂
             u₃ += N[i]*xᵢ.d₃
         end
+        us[I,J] = u₁
+        vs[I,J] = u₂
+        ws[I,J] = u₃
         xs1[I,J] = 𝑅*sin(ξ¹/𝑅) + α*u₁
         ys1[I,J] = ξ² + α*u₂
         zs1[I,J] = 𝑅*cos(ξ¹/𝑅) + α*u₃
