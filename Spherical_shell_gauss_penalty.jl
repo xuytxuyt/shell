@@ -12,7 +12,7 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 
-ndiv = 11
+ndiv = 64
 elements, nodes = import_Spherical_shell_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
@@ -31,7 +31,8 @@ eval(prescribleBoundary)
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
     Operator{:∫vᵢtᵢdΓ}(),
-    Operator{:ScordelisLoRoof_𝐴}(),
+    Operator{:SphericalShell_𝐴}(),
+    Operator{:SphericalShell_𝐵}(),
 ]
 
 k = zeros(3*nₚ,3*nₚ)
@@ -46,7 +47,7 @@ ops[2](elements["𝐵"],f)
 # for (i,αᵥ) in enumerate([1e9])
 #     for (j,αᵣ) in enumerate([1e5])
 αᵥ = 1e9
-αᵣ = 1e5
+αᵣ = 1e7
         opΓ = [
             Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
             Operator{:∫δθθdΓ}(:α=>αᵣ*E)
@@ -65,7 +66,7 @@ ops[2](elements["𝐵"],f)
 
         push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
         w₁ = ops[3](elements["𝐴"])
-        w₂ = ops[3](elements["𝐵"])
+        w₂ = ops[4](elements["𝐵"])
 
         println(w₁)
         println(w₂)
