@@ -3,10 +3,11 @@ import BenchmarkExample: BenchmarkExample
 
 include("import_vcc.jl")
 
-elements, nodes = import_vcc("msh/scordelislo_1.msh")
 
+# elements, nodes = import_vcc("msh/scordelislo_1.msh")
 # cs = BenchmarkExample.cylindricalCoordinate(25.0)
-cs = BenchmarkExample.sphericalCoordinate(25.0)
+elements, nodes = import_vcc("msh/sphericalshell_1.msh")
+cs = BenchmarkExample.sphericalCoordinate(10.0)
 
 
 𝒂₁ = cs.𝒂₁
@@ -32,10 +33,13 @@ cs = BenchmarkExample.sphericalCoordinate(25.0)
 # Γ²₂₁(x) = 0.0
 # Γ²₂₂(x) = 0.0
 
-# 𝑓(x) = 1.0+2.0*x[1]+3.0*x[2] + 4.0*x[1]^2 + 5.0*x[1]*x[2] + 6.0*x[2]^6
+𝑓(x) = 1.0+2.0*x[1]+3.0*x[2] + 4.0*x[1]^2 + 5.0*x[1]*x[2] + 6.0*x[2]^2
 # 𝑓(x) = 1.0
-𝑓(x) = x[1]
+# 𝑓(x) = x[1]
 ∂ₐ𝑓(x) = gradient(𝑓,x)
+∂ₐᵦ𝑓(x) = gradient(∂ₐ𝑓,x)
+𝑔(x) = (x[1]+x[2])^3
+∂ₐ𝑔(x) = gradient(𝑔,x)
 
 function ∇𝑓(x)
     grad = ∂ₐ𝑓(x)
@@ -43,8 +47,11 @@ function ∇𝑓(x)
     return grad[1]*𝒂¹(x_) + grad[2]*𝒂²(x_)
 end
 
-# 𝑣ᵃ(x) = Vec{2}((4.0+5.0*x[1]+6.0*x[2],7.0+8.0*x[1]+9.0*x[2]))
-𝑣ᵃ(x) = Vec{2}((1.0,0.0))
+𝑣ᵃ(x) = Vec{2}((4.0+5.0*x[1]+6.0*x[2],7.0+8.0*x[1]+9.0*x[2]))
+# 𝑣ᵃ(x) = Vec{2}((1.0,0.0))
+# Aᵃᵇ(x) = SymmetricTensor{2,2}((1.0+2.0*x[1]+3.0*x[2],2.0+3.0*x[1]+4.0*x[2],3.0+4.0*x[1]+5.0*x[2]))
+Aᵃᵇ(x) = SymmetricTensor{2,2}((1.0,2.0,3.0))
+
 function 𝒗(x)
     v = 𝑣ᵃ(x)
     x_ = Vec{3}((x[1],x[2],0.0))
@@ -70,9 +77,13 @@ function Γᵞᵧₐ(x)
 end
 
 x = Vec{2}((rand(),rand()))
+x_ = Vec{3}((rand(),rand(),rand()))
 (check1 = ∇𝑓(x)⋅𝒗(x) - ∂ₐ𝑓(x)⋅𝑣ᵃ(x);check1 ≈ 0.0) ? println("Check 1 right!: $check1") : println("Check 1 wrong: $check1")
 (check2 = 𝒗(x)⋅𝒏(x) - 𝑣ᵃ(x)⋅nₐ(x);check2 ≈ 0.0) ? println("Check 2 right!: $check2") : println("Check 2 wrong: $check2")
 (check3 = div𝒗(x) - 𝑣ᵃₐ(x) - Γᵞᵧₐ(x)⋅𝑣ᵃ(x);check3 ≈ 0.0) ? println("Check 3 right!: $check3") : println("Check 3 wrong: $check3")
+(check4 = 𝒂¹(x_) - 𝒂₂(x_)×𝒂₃(x_)/𝐽(x_);check4 ≈ Vec{3}((0.0,0.0,0.0))) ? println("Check 4 right!: $check4") : println("Check 4 wrong: $check4")
+(check5 = 𝒂²(x_) - 𝒂₃(x_)×𝒂₁(x_)/𝐽(x_);check5 ≈ Vec{3}((0.0,0.0,0.0))) ? println("Check 5 right!: $check5") : println("Check 5 wrong: $check5")
+(check6 = 𝒂³(x_) - 𝒂₁(x_)×𝒂₂(x_)/𝐽(x_);check6 ≈ Vec{3}((0.0,0.0,0.0))) ? println("Check 6 right!: $check6") : println("Check 6 wrong: $check6")
 
 err = 0.0
 temp1 = 0.0
@@ -82,8 +93,8 @@ for a in elements["Ω"]
     for ξ in 𝓖
         𝑤 = ξ.𝑤
         x_ = Vec{2}((ξ.x,ξ.y))
-        global err += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*div𝒗(x_))*𝑤
-        global temp1 += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*div𝒗(x_))*𝑤
+        # global err += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*div𝒗(x_))*𝑤
+        # global temp1 += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*div𝒗(x_))*𝑤
         # println(Γᵞᵧₐ(x_))
         # global err += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*𝑣ᵃₐ(x_))*𝑤
         # global temp += 𝑓(x_)*Γᵞᵧₐ(x_)⋅𝑣ᵃ(x_)*𝑤
@@ -91,6 +102,9 @@ for a in elements["Ω"]
         
         # global err += (∇𝑓(x_)⋅𝒗(x_) + 𝑓(x_)*div𝒗(x_))*𝐽(x_)*𝑤
         # println(𝑓(x_)*div𝒗(x_))
+
+        # global err += (∂ₐ𝑓(x_)[1]*𝑔(x_) + 𝑓(x_)*∂ₐ𝑔(x_)[1])*𝑤
+        global err += ∂ₐᵦ𝑓(x_) ⊡ Aᵃᵇ(x_)*𝑤
     end
     # println(temp)
 end
@@ -101,8 +115,26 @@ for a in elements["Γ"]
         𝑤 = ξ.𝑤
         x_ = Vec{2}((ξ.x,ξ.y))
         nₐ_ = Vec{2}((ξ.n₁,ξ.n₂))
-        global err -= 𝑓(x_)*𝑣ᵃ(x_)⋅nₐ_*𝑤
-        global temp2 -= 𝑓(x_)*𝑣ᵃ(x_)⋅nₐ_*𝑤
+        nᵃ_ = Vec{2}((ξ.n¹,ξ.n²))
+        # println(nₐ_)
+        n₁ = ξ.n₁
+        n₂ = ξ.n₂
+        n¹ = ξ.n¹
+        n² = ξ.n²
+        s₁ = ξ.s₁
+        s₂ = ξ.s₂
+        s¹ = ξ.s¹
+        s² = ξ.s²
+        n = n₁*n¹+n₂*n²
+        s = s₁*s¹+s₂*s²
+        # println("n: $n, s: $s")
+        # global err -= 𝑓(x_)*𝑣ᵃ(x_)⋅nₐ_*𝑤
+        # global temp2 -= 𝑓(x_)*𝑣ᵃ(x_)⋅nₐ_*𝑤
+        # global temp2 -= ξ.n₁*𝑤
+        # global temp2 -= ξ.n₂*𝑤
+        # global err -= 𝑓(x_)*𝑔(x_)*nₐ_[1]*𝑤
+        global err -= ∂ₐ𝑓(x_)⋅nᵃ_*nₐ_⋅Aᵃᵇ(x_)⋅nₐ_*𝑤
+                   -  𝑓(x_)*
     end
 end
 
