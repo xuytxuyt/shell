@@ -22,8 +22,8 @@ function import_vcc(filename::String)
     a¹² = cs.a¹²
     integrationOrder = 12
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
-    elements["Ω"] = getCurvedElements(nodes, entities["Ω"], integrationOrder,𝐽=𝐽)
-    elements["Γ"] = getCurvedElements(nodes, entities["Γ"], integrationOrder,𝒂₁=𝒂₁,𝒂₂=𝒂₂,𝒂₃=𝒂₃,a₁₁=a₁₁,a₂₂=a₂₂,a₁₂=a₁₂,a¹¹=a¹¹,a²²=a²²,a¹²=a¹²)
+    elements["Ω"] = getCurvedElements(nodes, entities["Ω"], cs, integrationOrder)
+    elements["Γ"] = getCurvedElements(nodes, entities["Γ"], cs, integrationOrder)
 
     return elements, nodes
 end
