@@ -6,6 +6,12 @@ const lobatto3 = ([-1.0,0.0,0.0,
                     0.0,0.0,0.0,
                     1.0,0.0,0.0],[1/3,4/3,1/3])
 
+const lobatto5 = ([-1.0,0.0,0.0,
+                   -(3/7)^0.5,0.0,0.0,
+                    0.0,0.0,0.0,
+                    (3/7)^0.5,0.0,0.0,
+                    1.0,0.0,0.0],[1/10,49/90,32/45,49/90,1/10])
+
 const lobatto7 = ([-1.0,0.0,0.0,
                    -(5/11+2/11*(5/3)^0.5)^0.5,0.0,0.0,
                    -(5/11-2/11*(5/3)^0.5)^0.5,0.0,0.0,
@@ -21,12 +27,39 @@ const lobatto7 = ([-1.0,0.0,0.0,
                    (124-7*15^0.5)/350,
                    1/21])
 
+const trilobatto13 = ([1.0000000000000000,0.0000000000000000,0.0,
+                       0.0000000000000000,1.0000000000000000,0.0,
+                       0.0000000000000000,0.0000000000000000,0.0,
+                       0.0000000000000000,0.5000000000000000,0.0,
+                       0.5000000000000000,0.0000000000000000,0.0,
+                       0.5000000000000000,0.5000000000000000,0.0,
+                       0.0000000000000000,0.8273268353539885,0.0,
+                       0.0000000000000000,0.1726731646460114,0.0,
+                       0.1726731646460114,0.0000000000000000,0.0,
+                       0.8273268353539885,0.0000000000000000,0.0,
+                       0.8273268353539885,0.1726731646460114,0.0,
+                       0.1726731646460114,0.8273268353539885,0.0,
+                       0.3333333333333333,0.3333333333333333,0.0],
+                       [-0.0277777777777778,
+                        -0.0277777777777778,
+                        -0.0277777777777778,
+                         0.0296296296296297,
+                         0.0296296296296297,
+                         0.0296296296296297,
+                         0.0907407407407407,
+                         0.0907407407407407,
+                         0.0907407407407407,
+                         0.0907407407407407,
+                         0.0907407407407407,
+                         0.0907407407407407,
+                         0.4500000000000000])
+
 function import_roof_gauss(filename::String)
     gmsh.initialize()
     gmsh.open(filename)
 
     type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
-    integrationOrder = 1
+    integrationOrder = 3
     nₘ = 55
     entities = getPhysicalGroups()
     nodes = get𝑿ᵢ()
@@ -34,12 +67,13 @@ function import_roof_gauss(filename::String)
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 3,γ = 5)
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
-    elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationOrder, sp)
-    elements["Γᵇ"] = getElements(nodes, entities["Γᵇ"], type, integrationOrder, sp, normal = true)
-    elements["Γʳ"] = getElements(nodes, entities["Γʳ"], type, integrationOrder, sp, normal = true)
-    elements["Γᵗ"] = getElements(nodes, entities["Γᵗ"], type, integrationOrder, sp, normal = true)
-    elements["Γˡ"] = getElements(nodes, entities["Γˡ"], type, integrationOrder, sp, normal = true)
+    elements["Ω"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationOrder, sp)
+    elements["Γᵇ"] = getCurvedElements(nodes, entities["Γᵇ"], type, cs, integrationOrder, sp)
+    elements["Γʳ"] = getCurvedElements(nodes, entities["Γʳ"], type, cs, integrationOrder, sp)
+    elements["Γᵗ"] = getCurvedElements(nodes, entities["Γᵗ"], type, cs, integrationOrder, sp)
+    elements["Γˡ"] = getCurvedElements(nodes, entities["Γˡ"], type, cs, integrationOrder, sp)
     elements["𝐴"] = getElements(nodes, entities["𝐴"], type, integrationOrder, sp)
     𝗠 = (0,zeros(nₘ))
     ∂𝗠∂x = (0,zeros(nₘ))
@@ -72,31 +106,30 @@ function import_roof_mix(filename::String,n)
     gmsh.initialize()
     gmsh.open(filename)
     integrationOrder = 3    
-    type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
-    nₘ = 21
-    # type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
-    # nₘ = 55
+    # type = ReproducingKernel{:Quadratic2D,:□,:CubicSpline}
+    # nₘ = 21
+    type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
+    nₘ = 55
     entities = getPhysicalGroups()
     nodes = get𝑿ᵢ()
     x = nodes.x
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 3,γ = 5)
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
-    integrationScheme = ([0.5,0.5,0.0,
-                          0.5,0.0,0.5,
-                          0.0,0.5,0.5],[1/3,1/3,1/3])
-    elements["Ωₚ"] = getMacroElements(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n,nₕ=2,nₐ=2)
-    elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationScheme, sp)
+    integrationScheme = trilobatto13
+    elements["Ωₚ"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationScheme)
+    elements["Ω"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationScheme, sp)
 
-    integrationScheme = lobatto7
-    elements["Γₚ"] = getMacroBoundaryElements(entities["Γ"],entities["Ω"],PiecewisePolynomial{:Linear2D},integrationScheme,n,nₕ=2,nₐ=6)
-    elements["Γ"] = getElements(nodes, entities["Γ"], type, integrationScheme, sp, normal = true)
-    elements["Γᵇ"] = getElements(nodes, entities["Γᵇ"], type, integrationScheme, sp, normal = true)
-    elements["Γʳ"] = getElements(nodes, entities["Γʳ"], type, integrationScheme, sp, normal = true)
-    elements["Γᵗ"] = getElements(nodes, entities["Γᵗ"], type, integrationScheme, sp, normal = true)
-    elements["Γˡ"] = getElements(nodes, entities["Γˡ"], type, integrationScheme, sp, normal = true)
+    integrationScheme = lobatto5
+    elements["Γₚ"] = getCurvedPiecewiseElements(entities["Γ"],PiecewisePolynomial{:Linear2D}, cs, integrationScheme,3)
+    elements["Γ"] = getCurvedElements(nodes, entities["Γ"], type, cs, integrationScheme, sp)
+    elements["Γᵇ"] = getCurvedElements(nodes, entities["Γᵇ"], type, cs, integrationScheme, sp)
+    elements["Γʳ"] = getCurvedElements(nodes, entities["Γʳ"], type, cs, integrationScheme, sp)
+    elements["Γᵗ"] = getCurvedElements(nodes, entities["Γᵗ"], type, cs, integrationScheme, sp)
+    elements["Γˡ"] = getCurvedElements(nodes, entities["Γˡ"], type, cs, integrationScheme, sp)
 
     # elements["Ωₚ"] = getMacroElements(entities["Ω"],PiecewisePolynomial{:Linear2D},integrationOrder,n,nₕ=2,nₐ=2)
     # elements["Ω"] = getElements(nodes, entities["Ω"], type, integrationOrder, sp)

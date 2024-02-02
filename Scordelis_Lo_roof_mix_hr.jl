@@ -2,7 +2,7 @@ using ApproxOperator, JLD
 
 import BenchmarkExample: BenchmarkExample
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 11
+ndiv = 16
 elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh",ndiv-1);
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
@@ -14,7 +14,8 @@ h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 # h = 1.0
 nₚ = length(nodes)
-nᵥ = Int(length(elements["Ω"])/2*3)
+# nᵥ = Int(length(elements["Ω"])/2*3)
+nᵥ = Int(length(elements["Ω"])*3)
 s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
@@ -86,7 +87,7 @@ opΩ[2](elements["Ω"],k)
 # d = [k+kᵅ+kᵝ kᴹᵛ';kᴹᵛ kᴹᴹ]\[f+fᵅ+fᵝ;fᴹ]
 # d = [k+kᵅ+kᵝ kᴺᵛ';kᴺᵛ kᴺᴺ]\[-f+fᵅ+fᵝ;fᴺ]
 # d = [zeros(3*nₚ,3*nₚ) kᴺᵛ' kᴹᵛ';kᴺᵛ kᴺᴺ zeros(3*nᵥ,3*nᵥ);kᴹᵛ zeros(3*nᵥ,3*nᵥ) kᴹᴹ]\[f+fᵅ+fᵝ;fᴺ;fᴹ]
-# d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + kᴹᵛ'*(kᴹᴹ\kᴹᵛ) + kᵅ + kᵝ)\(f+fᵅ+fᵝ)
+# d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + kᴹᵛ'*(kᴹᴹ\kᴹᵛ) + kᵅ + kᵝ)\(-f+fᵅ+fᵝ)
 d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + k + kᵅ + kᵝ)\(f+fᵅ+fᵝ)
 # d = (k + kᵅ + kᵝ)\(f+fᵅ+fᵝ)
 d₁ = d[1:3:3*nₚ]
