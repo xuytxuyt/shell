@@ -1,5 +1,5 @@
 
-using Tensors
+using Tensors, BenchmarkExample
 import Gmsh: gmsh
 
 const lobatto3 = ([-1.0,0.0,0.0,
