@@ -40,7 +40,7 @@ const trilobatto13 = ([1.0000000000000000,0.0000000000000000,0.0,
                        0.8273268353539885,0.1726731646460114,0.0,
                        0.1726731646460114,0.8273268353539885,0.0,
                        0.3333333333333333,0.3333333333333333,0.0],
-                       [-0.0277777777777778,
+                   0.5*[-0.0277777777777778,
                         -0.0277777777777778,
                         -0.0277777777777778,
                          0.0296296296296297,
@@ -75,6 +75,7 @@ function import_roof_gauss(filename::String)
     elements["Γᵗ"] = getCurvedElements(nodes, entities["Γᵗ"], type, cs, integrationOrder, sp)
     elements["Γˡ"] = getCurvedElements(nodes, entities["Γˡ"], type, cs, integrationOrder, sp)
     elements["𝐴"] = getElements(nodes, entities["𝐴"], type, integrationOrder, sp)
+    elements["Γ"] = getCurvedElements(nodes, entities["Γ"], cs, lobatto5)
     𝗠 = (0,zeros(nₘ))
     ∂𝗠∂x = (0,zeros(nₘ))
     ∂𝗠∂y = (0,zeros(nₘ))
@@ -357,6 +358,9 @@ prescribleBoundary = quote
 end
 
 prescribleForMix = quote
+    prescribe!(elements["Ωₚ"],:a¹¹=>(ξ¹,ξ²,ξ³)->cs.a¹¹(Vec{3}((ξ¹,ξ²,ξ³))))
+    prescribe!(elements["Ωₚ"],:a²²=>(ξ¹,ξ²,ξ³)->cs.a²²(Vec{3}((ξ¹,ξ²,ξ³))))
+    prescribe!(elements["Ωₚ"],:a¹²=>(ξ¹,ξ²,ξ³)->cs.a¹²(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ωₚ"],:a₁₁=>(ξ¹,ξ²,ξ³)->cs.a₁₁(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ωₚ"],:a₂₂=>(ξ¹,ξ²,ξ³)->cs.a₂₂(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ωₚ"],:a₁₂=>(ξ¹,ξ²,ξ³)->cs.a₁₂(Vec{3}((ξ¹,ξ²,ξ³))))
