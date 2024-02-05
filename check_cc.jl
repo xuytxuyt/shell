@@ -3,7 +3,7 @@ using ApproxOperator, Tensors, BenchmarkExample, LinearAlgebra
 
 include("import_Scordelis_Lo_roof.jl")
 ndiv = 16
-elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh",ndiv-1);
+elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh");
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
 𝐿 = BenchmarkExample.ScordelisLoRoof.𝐿
@@ -20,9 +20,9 @@ nᵥ = nₑ*3
 s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
-set∇²𝝭!(elements["Ω"])
+set∇𝝭!(elements["Ωₘ"])
 set∇²𝝭!(elements["Ωₚ"])
-set∇𝝭!(elements["Γ"])
+set∇𝝭!(elements["Γₘ"])
 set∇𝝭!(elements["Γₚ"])
 
 eval(prescribleForMix)
@@ -50,18 +50,18 @@ kᴹᵛ = zeros(9*nᵥ,3*nₚ)
 
 ops[1](elements["Ωₚ"],kᵋᵋ)
 ops[2](elements["Ωₚ"],kᴺᵋ)
-ops[3](elements["Γₚ"],elements["Γ"],kᴺᵛ)
-ops[4](elements["Ωₚ"],elements["Ω"],kᴺᵛ)
+ops[3](elements["Γₚ"],elements["Γₘ"],kᴺᵛ)
+ops[4](elements["Ωₚ"],elements["Ωₘ"],kᴺᵛ)
 
 ops[5](elements["Ωₚ"],kᵏᵏ)
 ops[6](elements["Ωₚ"],kᴹᵏ)
-ops[7](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[8](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[9](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[10](elements["Ωₚ"],elements["Ω"],kᴹᵛ)
+ops[7](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[8](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[9](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 
-kᵇ = kᴺᵋ\kᴺᵛ
-kᵐ = kᴹᵏ\kᴹᵛ
+kᵇ = - kᴺᵋ\kᴺᵛ
+kᵐ = - kᴹᵏ\kᴹᵛ
 
 n = 2
 uex(x) = Vec{3}(((x[1]+2*x[2])^n,(3*x[1]+4*x[2])^n,(5*x[1]+6*x[2])^n))
@@ -123,10 +123,11 @@ for a in elements["Ωₚ"]
         end
         # println(∂₁u[1])
         # println(∂₁₁uʰ[1])
+        global err += abs(∂₁u[1]-∂₁uʰ[1])
         # global err += abs(∂₂u[2]-∂₂uʰ[2])
-        # global err += abs(∂₁₁u[3]-∂₁₁uʰ[3])
-        # global err += abs(∂₂₂u[3]-∂₂₂uʰ[3])
-        global err += abs(∂₁₂u[3]-∂₁₂uʰ[3])
+        # global err += abs(∂₁₁u[1]-∂₁₁uʰ[1])
+        # global err += abs(∂₂₂u[2]-∂₂₂uʰ[2])
+        # global err += abs(∂₁₂u[3]-∂₁₂uʰ[3])
     end
 end
 println(err)

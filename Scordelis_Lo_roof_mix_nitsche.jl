@@ -19,16 +19,14 @@ s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set𝝭!(elements["Ω"])
-set∇²𝝭!(elements["Ωₚ"])
-set∇𝝭!(elements["Γₚ"])
-set∇𝝭!(elements["Γᵇₚ"])
-set∇𝝭!(elements["Γᵗₚ"])
-set∇𝝭!(elements["Γˡₚ"])
 set∇𝝭!(elements["Ωₘ"])
+set∇²𝝭!(elements["Ωₚ"])
 set∇𝝭!(elements["Γₘ"])
-set∇𝝭!(elements["Γᵇ"])
-set∇𝝭!(elements["Γᵗ"])
-set∇𝝭!(elements["Γˡ"])
+set∇𝝭!(elements["Γₚ"])
+set∇̂³𝝭!(elements["Γᵇ"])
+set∇𝝭!(elements["Γʳ"])
+set∇̂³𝝭!(elements["Γᵗ"])
+set∇̂³𝝭!(elements["Γˡ"])
 set𝝭!(elements["𝐴"])
 
 eval(prescribleForMix)
@@ -47,6 +45,8 @@ kᴺᵛ = zeros(6*nᵥ,3*nₚ)
 kᵏᵏ = zeros(9*nᵥ,9*nᵥ)
 kᴹᵏ = zeros(9*nᵥ,9*nᵥ)
 kᴹᵛ = zeros(9*nᵥ,3*nₚ)
+fᴺ = zeros(6*nᵥ)
+fᴹ = zeros(3*nᵥ)
 
 ops[1](elements["Ω"],kᵋᵋ)
 ops[2](elements["Ω"],kᴺᵋ)
@@ -60,21 +60,30 @@ ops[8](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[9](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 
-eval(opsHR)
-fᴺ = zeros(6*nᵥ)
-fᴹ = zeros(9*nᵥ)
-opsh[1](elements["Γᵇₚ"],elements["Γᵇ"],kᴺᵛ,fᴺ)
-opsh[1](elements["Γᵗₚ"],elements["Γᵗ"],kᴺᵛ,fᴺ)
-opsh[1](elements["Γˡₚ"],elements["Γˡ"],kᴺᵛ,fᴺ)
-opsh[2](elements["Γᵇₚ"],elements["Γᵇ"],kᴹᵛ,fᴹ)
-opsh[2](elements["Γᵗₚ"],elements["Γᵗ"],kᴹᵛ,fᴹ)
-opsh[2](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
-opsh[3](elements["Γᵗₚ"],elements["Γᵗ"],kᴹᵛ,fᴹ)
-opsh[3](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
+eval(opsNitsche)
+kᵛ = zeros(3*nₚ,3*nₚ)
+fᵛ = zeros(3*nₚ)
+opsv[1](elements["Γᵇ"],kᵛ,fᵛ)
+opsv[1](elements["Γᵗ"],kᵛ,fᵛ)
+opsv[1](elements["Γˡ"],kᵛ,fᵛ)
+opsv[2](elements["Γᵇ"],kᵛ,fᵛ)
+opsv[2](elements["Γᵗ"],kᵛ,fᵛ)
+opsv[2](elements["Γˡ"],kᵛ,fᵛ)
+opsv[3](elements["Γᵗ"],kᵛ,fᵛ)
+opsv[3](elements["Γˡ"],kᵛ,fᵛ)
 
-kᵋᵛ = kᴺᵋ\kᴺᵛ
-kᵏᵛ = kᴹᵏ\kᴹᵛ
-d = (kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ)\(-f + kᵋᵛ'*kᵋᵋ*(kᴺᵋ\fᴺ) + kᵏᵛ'*kᵏᵏ*(kᴹᵏ\fᴹ))
+αᵥ = 1e5
+αᵣ = 1e3
+eval(opsPenalty)
+kᵅ = zeros(3*nₚ,3*nₚ)
+fᵅ = zeros(3*nₚ)
+opsα[1](elements["Γᵇ"],kᵅ,fᵅ)
+opsα[1](elements["Γᵗ"],kᵅ,fᵅ)
+opsα[1](elements["Γˡ"],kᵅ,fᵅ)
+opsα[2](elements["Γᵗ"],kᵅ,fᵅ)
+opsα[2](elements["Γˡ"],kᵅ,fᵅ)
+
+d = (kᵛ+kᵅ + (kᴺᵋ\kᴺᵛ)'*kᵋᵋ*(kᴺᵋ\kᴺᵛ) + (kᴹᵏ\kᴹᵛ)'*kᵏᵏ*(kᴹᵏ\kᴹᵛ))\(f+fᵛ+fᵅ)
 
 d₁ = d[1:3:3*nₚ]
 d₂ = d[2:3:3*nₚ]
@@ -85,4 +94,4 @@ push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
 w = op𝐴(elements["𝐴"])
 
 println(w)
-@save compress=true "jld/scordelislo_mix_hr_"*string(ndiv)*".jld" d₁ d₂ d₃
+@save compress=true "jld/scordelislo_mix_nitsche_"*string(ndiv)*".jld" d₁ d₂ d₃

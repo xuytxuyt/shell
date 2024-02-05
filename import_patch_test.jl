@@ -117,7 +117,7 @@ function import_roof_mix(filename::String)
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 3,γ = 5)
-    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
     integrationOrder= 3
@@ -171,7 +171,7 @@ function import_roof_mix(filename::String)
     push!(elements["𝐴"], :𝝭=>:𝑠)
     push!(elements["𝐴"], :𝗠=>𝗠)
 
-    # gmsh.finalize()
+    gmsh.finalize()
     return elements, nodes
 end
 
