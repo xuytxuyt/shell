@@ -87,6 +87,7 @@ opsNitsche = quote
         Operator{:∫𝒏𝑵𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h),
         Operator{:∫∇𝑴𝒏𝒂₃𝒈dΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h),
         Operator{:∫MₙₙθₙdΓ_Nitsche}(:E=>E,:ν=>ν,:h=>h),
+        Operator{:ΔMₙₛ𝒂₃𝒈_Nitsche}(:E=>E,:ν=>ν,:h=>h),
     ]
 end
 

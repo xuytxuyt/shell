@@ -123,11 +123,11 @@ for a in elements["Ωₚ"]
         end
         # println(∂₁u[1])
         # println(∂₁₁uʰ[1])
-        global err += abs(∂₁u[1]-∂₁uʰ[1])
+        # global err += abs(∂₁u[1]-∂₁uʰ[1])
         # global err += abs(∂₂u[2]-∂₂uʰ[2])
-        # global err += abs(∂₁₁u[1]-∂₁₁uʰ[1])
-        # global err += abs(∂₂₂u[2]-∂₂₂uʰ[2])
-        # global err += abs(∂₁₂u[3]-∂₁₂uʰ[3])
+        # global err += abs(∂₁₁u[3]-∂₁₁uʰ[3])
+        # global err += abs(∂₂₂u[3]-∂₂₂uʰ[3])
+        global err += abs(∂₁₂u[2]-∂₁₂uʰ[2])
     end
 end
 println(err)
