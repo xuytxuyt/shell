@@ -1,9 +1,10 @@
-using ApproxOperator, JLD
+using ApproxOperator, JLD, XLSX 
 
 import BenchmarkExample: BenchmarkExample
+include("import_prescrible_ops.jl")
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 16
-elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh",ndiv-1);
+ndiv = 32
+elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh");
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
 𝐿 = BenchmarkExample.ScordelisLoRoof.𝐿
@@ -15,44 +16,28 @@ cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 nₚ = length(nodes)
 # nᵥ = Int(length(elements["Ω"])/2*3)
 nᵥ = Int(length(elements["Ω"])*3)
-s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
-set∇²𝝭!(elements["Ω"])
+eval(prescribeForMix)
+eval(prescribeVariables)
+eval(prescribeForPenalty)
+
+set𝝭!(elements["Ω"])
 set∇²𝝭!(elements["Ωₚ"])
-set∇𝝭!(elements["Γ"])
 set∇𝝭!(elements["Γₚ"])
+set∇𝝭!(elements["Ωₘ"])
+set∇𝝭!(elements["Γₘ"])
 set𝝭!(elements["Γᵇ"])
-set𝝭!(elements["Γʳ"])
 set∇𝝭!(elements["Γᵗ"])
 set∇𝝭!(elements["Γˡ"])
 set𝝭!(elements["𝐴"])
 
-eval(prescribleForMix)
-eval(prescribleBoundary)
+eval(opsMix)
 
-ops = [
-    Operator{:∫δεCεdΩ}(:E=>E,:ν=>ν,:h=>h),
-    Operator{:∫δNεdΩ}(),
-    Operator{:∫𝒏𝑵𝒗dΓ}(),
-    Operator{:∫∇𝑵𝒗dΩ}(),
-    Operator{:∫δκCκdΩ}(:E=>E,:ν=>ν,:h=>h),
-    Operator{:∫δMκdΩ}(),
-    Operator{:∫∇𝑴𝒏𝒂₃𝒗dΓ}(),
-    Operator{:∫𝑴ₙₙ𝜽ₙdΓ}(),
-    Operator{:ΔMₙₛ𝒂₃𝒗}(),
-    Operator{:∫∇𝑴∇𝒂₃𝒗dΩ}(),
-    Operator{:ScordelisLoRoof_𝐴}()
-]
 opForce = Operator{:∫vᵢbᵢdΩ}()
-
-opΩ = [
-    Operator{:∫εᵢⱼNᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
-    Operator{:∫κᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
-]
-
-opPenalty = [
-]
+f = zeros(3*nₚ)
+opForce(elements["Ωₘ"],f)
 
 kᵋᵋ = zeros(6*nᵥ,6*nᵥ)
 kᴺᵋ = zeros(6*nᵥ,6*nᵥ)
@@ -63,47 +48,60 @@ kᴹᵛ = zeros(9*nᵥ,3*nₚ)
 fᴺ = zeros(6*nᵥ)
 fᴹ = zeros(3*nᵥ)
 
-ops[1](elements["Ωₚ"],kᵋᵋ)
-ops[2](elements["Ωₚ"],kᴺᵋ)
-ops[3](elements["Γₚ"],elements["Γ"],kᴺᵛ)
-ops[4](elements["Ωₚ"],elements["Ω"],kᴺᵛ)
+ops[1](elements["Ω"],kᵋᵋ)
+ops[2](elements["Ω"],kᴺᵋ)
+ops[3](elements["Γₚ"],elements["Γₘ"],kᴺᵛ)
+ops[4](elements["Ωₚ"],elements["Ωₘ"],kᴺᵛ)
 
-ops[5](elements["Ωₚ"],kᵏᵏ)
-ops[6](elements["Ωₚ"],kᴹᵏ)
-ops[7](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[8](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[9](elements["Γₚ"],elements["Γ"],kᴹᵛ)
-ops[10](elements["Ωₚ"],elements["Ω"],kᴹᵛ)
+ops[5](elements["Ω"],kᵏᵏ)
+ops[6](elements["Ω"],kᴹᵏ)
+ops[7](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[8](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[9](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
+ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 
-k = zeros(3*nₚ,3*nₚ)
-f = zeros(3*nₚ)
+kᵋᵛ = kᴺᵋ\kᴺᵛ
+kᵏᵛ = kᴹᵏ\kᴹᵛ
+op𝐴 = Operator{:ScordelisLoRoof_𝐴}()
+
+d₁ = zeros(nₚ)
+d₂ = zeros(nₚ)
+d₃ = zeros(nₚ)
+d = zeros(3*nₚ)
 kᵅ = zeros(3*nₚ,3*nₚ)
 fᵅ = zeros(3*nₚ)
-kᵝ = zeros(3*nₚ,3*nₚ)
-fᵝ = zeros(3*nₚ)
-opForce(elements["Ω"],f)
-opPenalty[1](elements["Γᵇ"],kᵅ,fᵅ)
-opPenalty[1](elements["Γᵗ"],kᵅ,fᵅ)
-opPenalty[1](elements["Γˡ"],kᵅ,fᵅ)
-opPenalty[2](elements["Γᵗ"],kᵝ,fᵝ)
-opPenalty[2](elements["Γˡ"],kᵝ,fᵝ)
-
-# d = [k+kᵅ+kᵝ zeros(3*nₚ,6*nᵥ) kᴺᵛ';zeros(6*nᵥ,3*nₚ) kᵋᵋ kᴺᵋ';kᴺᵛ kᴺᵋ zeros(6*nᵥ,6*nᵥ)]\[f+fᵅ+fᵝ;zeros(12*nᵥ)]
-# d = (k+kᵅ+kᵝ + (kᴺᵋ\kᴺᵛ)'*kᵋᵋ*(kᴺᵋ\kᴺᵛ))\(f+fᵅ+fᵝ)
-d = (kᵅ+kᵝ + (kᴺᵋ\kᴺᵛ)'*kᵋᵋ*(kᴺᵋ\kᴺᵛ) - (kᴹᵏ\kᴹᵛ)'*kᵏᵏ*(kᴹᵏ\kᴹᵛ))\(f+fᵅ+fᵝ)
-# d = (k+kᵅ+kᵝ)\(f+fᵅ+fᵝ)
-# d = [k+kᵅ+kᵝ kᴹᵛ';kᴹᵛ kᴹᴹ]\[f+fᵅ+fᵝ;fᴹ]
-# d = [k+kᵅ+kᵝ kᴺᵛ';kᴺᵛ kᴺᴺ]\[-f+fᵅ+fᵝ;fᴺ]
-# d = [zeros(3*nₚ,3*nₚ) kᴺᵛ' kᴹᵛ';kᴺᵛ kᴺᴺ zeros(3*nᵥ,3*nᵥ);kᴹᵛ zeros(3*nᵥ,3*nᵥ) kᴹᴹ]\[f+fᵅ+fᵝ;fᴺ;fᴹ]
-# d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + kᴹᵛ'*(kᴹᴹ\kᴹᵛ) + kᵅ + kᵝ)\(-f+fᵅ+fᵝ)
-# d = (kᴺᵛ'*(kᴺᴺ\kᴺᵛ) + k + kᵅ + kᵝ)\(f+fᵅ+fᵝ)
-# d = (k + kᵅ + kᵝ)\(f+fᵅ+fᵝ)
-d₁ = d[1:3:3*nₚ]
-d₂ = d[2:3:3*nₚ]
-d₃ = d[3:3:3*nₚ]
-
+k_ = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
+f_ = -f
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-w = ops[11](elements["𝐴"])
+index = [8,16,24,32]
+for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+    for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+        opsα = [
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
+            Operator{:∫δθθdΓ}(:α=>αᵣ*E),
+        ]
+        fill!(kᵅ,0.0)
+        fill!(fᵅ,0.0)
+        opsα[1](elements["Γᵇ"],kᵅ,fᵅ)
+        opsα[1](elements["Γᵗ"],kᵅ,fᵅ)
+        opsα[1](elements["Γˡ"],kᵅ,fᵅ)
+        opsα[2](elements["Γᵗ"],kᵅ,fᵅ)
+        opsα[2](elements["Γˡ"],kᵅ,fᵅ)
 
-println(w)
-@save compress=true "jld/scordelislo_mix_"*string(ndiv)*".jld" d₁ d₂ d₃
+        d .= (k_ - kᵅ)\(f_ - fᵅ)
+
+        d₁ .= d[1:3:3*nₚ]
+        d₂ .= d[2:3:3*nₚ]
+        d₃ .= d[3:3:3*nₚ]
+
+        w = op𝐴(elements["𝐴"])
+        println(17*(i-1)+j)
+        println(w)
+
+        XLSX.openxlsx("./xlsx/scordelis_lo_roof_penalty_alpha.xlsx", mode="rw") do xf
+            ind = findfirst((x)->x==ndiv,index)
+            𝐿₂_row = Char(64+j)*string(i)
+            xf[ind][𝐿₂_row] = w
+        end
+    end
+end

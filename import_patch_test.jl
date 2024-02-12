@@ -7,22 +7,24 @@ function import_roof_gauss(filename::String)
     gmsh.open(filename)
 
     type = ReproducingKernel{:Quadratic2D,:□,:QuinticSpline}
-    integrationOrder = 8
+    integrationOrder = 4
     entities = getPhysicalGroups()
     nodes = get𝑿ᵢ()
     x = nodes.x
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 1,γ = 5)
-    # cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
-    cs = BenchmarkExample.cartesianCoordinate()
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
+    # cs = BenchmarkExample.cartesianCoordinate()
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
     elements["Ω"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationOrder, sp)
-    elements["Γ¹"] = getCurvedElements(nodes, entities["Γ¹"], type, cs, integrationScheme, sp)
-    elements["Γ²"] = getCurvedElements(nodes, entities["Γ²"], type, cs, integrationScheme, sp)
-    elements["Γ³"] = getCurvedElements(nodes, entities["Γ³"], type, cs, integrationScheme, sp)
-    elements["Γ⁴"] = getCurvedElements(nodes, entities["Γ⁴"], type, cs, integrationScheme, sp)
+    elements["Γ¹"] = getCurvedElements(nodes, entities["Γ¹"], type, cs, integrationOrder, sp)
+    elements["Γ²"] = getCurvedElements(nodes, entities["Γ²"], type, cs, integrationOrder, sp)
+    elements["Γ³"] = getCurvedElements(nodes, entities["Γ³"], type, cs, integrationOrder, sp)
+    elements["Γ⁴"] = getCurvedElements(nodes, entities["Γ⁴"], type, cs, integrationOrder, sp)
 
+    integrationOrder= 8
+    elements["Ωᵍ"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationOrder, sp)
     gmsh.finalize()
     return elements, nodes
 end
@@ -39,14 +41,14 @@ function import_roof_mix(filename::String)
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 1,γ = 5)
-    # cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
-    cs = BenchmarkExample.cartesianCoordinate()
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
+    # cs = BenchmarkExample.cartesianCoordinate()
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
     integrationOrder= 2
     elements["Ω"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationOrder)
 
-    integrationScheme = trilobatto6
+    integrationScheme = trilobatto3
     elements["Ωₚ"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationScheme)
     elements["Ωₘ"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationScheme, sp)
 
@@ -81,14 +83,14 @@ function import_roof_mix_nitsche(filename::String)
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 1,γ = 5)
-    # cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
-    cs = BenchmarkExample.cartesianCoordinate()
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
+    # cs = BenchmarkExample.cartesianCoordinate()
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
     integrationOrder= 2
     elements["Ω"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationOrder)
 
-    integrationScheme = trilobatto6
+    integrationScheme = trilobatto3
     elements["Ωₚ"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationScheme)
     elements["Ωₘ"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationScheme, sp)
 
@@ -139,11 +141,16 @@ prescribeForGauss = quote
     prescribe!(elements["Ω"],:b₁=>(ξ¹,ξ²,ξ³)->vs.𝒃(Vec{2}((ξ¹,ξ²)))[1])
     prescribe!(elements["Ω"],:b₂=>(ξ¹,ξ²,ξ³)->vs.𝒃(Vec{2}((ξ¹,ξ²)))[2])
     prescribe!(elements["Ω"],:b₃=>(ξ¹,ξ²,ξ³)->vs.𝒃(Vec{2}((ξ¹,ξ²)))[3])
+    push!(elements["Ω"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠, :∂²𝝭∂x²=>:𝑠, :∂²𝝭∂x∂y=>:𝑠, :∂²𝝭∂y²=>:𝑠)
+    push!(elements["Ω"], :𝗠=>𝗠, :∂𝗠∂x=>∂𝗠∂x, :∂𝗠∂y=>∂𝗠∂y, :∂²𝗠∂x²=>∂²𝗠∂x², :∂²𝗠∂y²=>∂²𝗠∂y², :∂²𝗠∂x∂y=>∂²𝗠∂x∂y)
 end
 prescribeForMix = quote
     𝗠 = (0,zeros(nₘ))
     ∂𝗠∂x = (0,zeros(nₘ))
     ∂𝗠∂y = (0,zeros(nₘ))
+    ∂²𝗠∂x² = (0,zeros(nₘ))
+    ∂²𝗠∂x∂y = (0,zeros(nₘ))
+    ∂²𝗠∂y² = (0,zeros(nₘ))
     prescribe!(elements["Ω"],:a¹¹=>(ξ¹,ξ²,ξ³)->cs.a¹¹(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ω"],:a²²=>(ξ¹,ξ²,ξ³)->cs.a²²(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ω"],:a¹²=>(ξ¹,ξ²,ξ³)->cs.a¹²(Vec{3}((ξ¹,ξ²,ξ³))))
@@ -545,12 +552,12 @@ prescribeVariables = quote
     prescribe!(elements["Ωᵍ"],:Γ²₁₂=>(ξ¹,ξ²,ξ³)->cs.Γ²₁₂(Vec{3}((ξ¹,ξ²,ξ³))))
     prescribe!(elements["Ωᵍ"],:Γ²₂₂=>(ξ¹,ξ²,ξ³)->cs.Γ²₂₂(Vec{3}((ξ¹,ξ²,ξ³))))
 
-    𝗠 = (0,zeros(nₘ))
-    ∂𝗠∂x = (0,zeros(nₘ))
-    ∂𝗠∂y = (0,zeros(nₘ))
-    ∂²𝗠∂x² = (0,zeros(nₘ))
-    ∂²𝗠∂x∂y = (0,zeros(nₘ))
-    ∂²𝗠∂y² = (0,zeros(nₘ))
+    # 𝗠 = (0,zeros(nₘ))
+    # ∂𝗠∂x = (0,zeros(nₘ))
+    # ∂𝗠∂y = (0,zeros(nₘ))
+    # ∂²𝗠∂x² = (0,zeros(nₘ))
+    # ∂²𝗠∂x∂y = (0,zeros(nₘ))
+    # ∂²𝗠∂y² = (0,zeros(nₘ))
     push!(elements["Ωᵍ"], :𝝭=>:𝑠, :∂𝝭∂x=>:𝑠, :∂𝝭∂y=>:𝑠, :∂²𝝭∂x²=>:𝑠, :∂²𝝭∂x∂y=>:𝑠, :∂²𝝭∂y²=>:𝑠)
     push!(elements["Ωᵍ"], :𝗠=>𝗠, :∂𝗠∂x=>∂𝗠∂x, :∂𝗠∂y=>∂𝗠∂y, :∂²𝗠∂x²=>∂²𝗠∂x², :∂²𝗠∂y²=>∂²𝗠∂y², :∂²𝗠∂x∂y=>∂²𝗠∂x∂y)
 end

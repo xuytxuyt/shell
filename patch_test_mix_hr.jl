@@ -14,8 +14,8 @@ E = BenchmarkExample.PatchTestThinShell.𝐸
 ν = BenchmarkExample.PatchTestThinShell.𝜈
 h = BenchmarkExample.PatchTestThinShell.ℎ
 
-# cs = BenchmarkExample.cylindricalCoordinate(𝑅)
-cs = BenchmarkExample.cartesianCoordinate()
+cs = BenchmarkExample.cylindricalCoordinate(𝑅)
+# cs = BenchmarkExample.cartesianCoordinate()
 
 nₚ = length(nodes)
 nᵥ = Int(length(elements["Ω"])*3)
@@ -23,11 +23,7 @@ s = 2.5*0.1*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 n = 2
-# u(x) = Vec{3}((x[1]+2*x[2],0.0,x[1]+x[2]))
 u(x) = Vec{3}(((x[1]+2*x[2])^n,(3*x[1]+4*x[2])^n,(5*x[1]+6*x[2])^n))
-# u(x) = Vec{3}(((x[1]+2*x[2])^n,0.0,0.0))
-# u(x) = Vec{3}((0.0,0.0,(x[1]+x[2])^n))
-# u(x) = Vec{3}((0.0,3*x[1]+4*x[2],0.0))
 vs = BenchmarkExample.PatchTestThinShell.variables(cs,u)
 
 eval(prescribeForMix)
@@ -103,19 +99,20 @@ d₂ = d[2:3:3*nₚ]
 d₃ = d[3:3:3*nₚ]
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
+@save compress=true "jld/patchtest_mix_hr.jld" d₁ d₂ d₃
 
 set∇²𝝭!(elements["Ωᵍ"])
 opE = Operator{:Hₑ_ThinShell}(:E=>E,:ν=>ν,:h=>h)
 Hₑ, L₂ = opE(elements["Ωᵍ"])
 
-dᵛ = zeros(3*nₚ)
-for (i,node) in enumerate(nodes)
-    x = Vec{3}((node.x,node.y,node.z))
-    u_ = u(x)
-    dᵛ[3*i-2] = u_[1]
-    dᵛ[3*i-1] = u_[2]
-    dᵛ[3*i]   = u_[3]
-end
+# dᵛ = zeros(3*nₚ)
+# for (i,node) in enumerate(nodes)
+#     x = Vec{3}((node.x,node.y,node.z))
+#     u_ = u(x)
+#     dᵛ[3*i-2] = u_[1]
+#     dᵛ[3*i-1] = u_[2]
+#     dᵛ[3*i]   = u_[3]
+# end
 
 # fex = (kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ)*dᵛ - (-f + kᵋᵛ'*kᵋᵋ*(kᴺᵋ\fᴺ) + kᵏᵛ'*kᵏᵏ*(kᴹᵏ\fᴹ))
 # fex1 = (kᵋᵛ'*kᵋᵋ*kᵋᵛ)*dᵛ - (-f + kᵋᵛ'*kᵋᵋ*(kᴺᵋ\fᴺ))
