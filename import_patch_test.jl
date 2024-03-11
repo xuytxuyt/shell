@@ -14,7 +14,7 @@ function import_roof_gauss(filename::String)
     y = nodes.y
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 1,γ = 5)
-    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
+    cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
     # cs = BenchmarkExample.cartesianCoordinate()
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
     elements["Ω"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationOrder, sp)
@@ -42,17 +42,18 @@ function import_roof_mix(filename::String)
     z = nodes.z
     sp = RegularGrid(x,y,z,n = 1,γ = 5)
     cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
+    # cs = BenchmarkExample.sphericalCoordinate(BenchmarkExample.PatchTestThinShell.𝑅)
     # cs = BenchmarkExample.cartesianCoordinate()
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
-    integrationOrder= 2
+    integrationOrder= 3
     elements["Ω"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationOrder)
 
-    integrationScheme = trilobatto3
+    integrationScheme = trilobatto13
     elements["Ωₚ"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationScheme)
     elements["Ωₘ"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationScheme, sp)
 
-    integrationScheme = lobatto3
+    integrationScheme = lobatto5
     elements["Γₚ"] = getCurvedPiecewiseElements(entities["Γ"],PiecewisePolynomial{:Linear2D}, cs, integrationScheme,3)
     elements["Γₘ"] = getCurvedElements(nodes, entities["Γ"], type, cs, integrationScheme, sp)
     elements["Γ¹"] = getCurvedElements(nodes, entities["Γ¹"], type, cs, integrationScheme, sp)

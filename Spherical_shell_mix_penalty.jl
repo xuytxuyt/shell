@@ -1,9 +1,9 @@
 using ApproxOperator, JLD
 
-import BenchmarkExample: BenchmarkExample
+import BenchmarkExample: BenchmarkExample, XLSX
 include("import_prescrible_ops.jl")
 include("import_Spherical_shell.jl")
-ndiv = 16
+ndiv = 32
 elements, nodes = import_spherical_mix("msh/sphericalshell_"*string(ndiv)*".msh");
 
 nₘ = 21
@@ -60,29 +60,59 @@ ops[8](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[9](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 
-αᵥ = 1e3
-αᵣ = 1e3
-eval(opsPenalty)
+
+d₁ = zeros(nₚ)
+d₂ = zeros(nₚ)
+d₃ = zeros(nₚ)
+d = zeros(3*nₚ)
 kᵅ = zeros(3*nₚ,3*nₚ)
 fᵅ = zeros(3*nₚ)
-opsα[1](elements["Γˡ"],kᵅ,fᵅ)
-opsα[1](elements["Γʳ"],kᵅ,fᵅ)
-opsα[2](elements["Γˡ"],kᵅ,fᵅ)
-opsα[2](elements["Γʳ"],kᵅ,fᵅ)
 
-opsα[1](elements["𝐴"],kᵅ,fᵅ)
+kᴳ = zeros(3*nₚ)
+ξ = elements["𝐴"][1].𝓖[1]
+𝓒 = elements["𝐴"][1].𝓒
+N = ξ[:𝝭]
+for (i,xᵢ) in enumerate(𝓒)
+    I = xᵢ.𝐼
+    kᴳ[3*I] = -N[i]*E
+end
 
 kᵋᵛ = kᴺᵋ\kᴺᵛ
 kᵏᵛ = kᴹᵏ\kᴹᵛ
-d = (kᵅ + kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ)\(-f + fᵅ)
-
-d₁ = d[1:3:3*nₚ]
-d₂ = d[2:3:3*nₚ]
-d₃ = d[3:3:3*nₚ]
-
+k = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
 op𝐴 = Operator{:SphericalShell_𝐴}()
-push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-w = op𝐴(elements["𝐴"])
 
-println(w)
-@save compress=true "jld/spherical_shell_mix_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
+push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
+# index = [8,16,24,32]
+# for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+#     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+        αᵥ = 1e9
+        αᵣ = 1e7
+        opsα = [
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ),
+            Operator{:∫δθθdΓ}(:α=>αᵣ),
+        ]
+        fill!(kᵅ,0.0)
+        fill!(fᵅ,0.0)
+        opsα[1](elements["Γʳ"],kᵅ,fᵅ)
+        opsα[1](elements["Γˡ"],kᵅ,fᵅ)
+        opsα[2](elements["Γʳ"],kᵅ,fᵅ)
+        opsα[2](elements["Γˡ"],kᵅ,fᵅ)
+
+        d = [k - kᵅ kᴳ;kᴳ' 0]\[-f - fᵅ;0]
+
+        d₁ .= d[1:3:3*nₚ]
+        d₂ .= d[2:3:3*nₚ]
+        d₃ .= d[3:3:3*nₚ]
+
+        w = op𝐴(elements["𝐴"])
+        # println(17*(i-1)+j)
+        println(w)
+
+        # XLSX.openxlsx("./xlsx/spherical_penalty_alpha.xlsx", mode="rw") do xf
+        #     ind = findfirst((x)->x==ndiv,index)
+        #     𝐿₂_row = Char(64+j)*string(i)
+        #     xf[ind][𝐿₂_row] = w
+        # end
+#     end
+# end

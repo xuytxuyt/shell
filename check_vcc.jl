@@ -1,53 +1,80 @@
 
+using Revise
 using ApproxOperator, Tensors, BenchmarkExample, LinearAlgebra
 
-include("import_Scordelis_Lo_roof.jl")
-ndiv = 16
-elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh",ndiv-1);
+include("import_prescrible_ops.jl")
+include("import_Spherical_shell.jl")
+# ndiv = 16
+# elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh",ndiv-1);
+elements, nodes = import_spherical_mix("msh/sphericalshell_8.msh")
+cs = BenchmarkExample.sphericalCoordinate(BenchmarkExample.SphericalShell.𝑅)
 
-𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
-𝐿 = BenchmarkExample.ScordelisLoRoof.𝐿
-b₃ = BenchmarkExample.ScordelisLoRoof.𝑞
-E = BenchmarkExample.ScordelisLoRoof.𝐸
-ν = BenchmarkExample.ScordelisLoRoof.𝜈
-h = BenchmarkExample.ScordelisLoRoof.ℎ
-cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
+# 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
+# 𝐿 = BenchmarkExample.ScordelisLoRoof.𝐿
+# b₃ = BenchmarkExample.ScordelisLoRoof.𝑞
+# E = BenchmarkExample.ScordelisLoRoof.𝐸
+# ν = BenchmarkExample.ScordelisLoRoof.𝜈
+# h = BenchmarkExample.ScordelisLoRoof.ℎ
+# cs = BenchmarkExample.cylindricalCoordinate(BenchmarkExample.ScordelisLoRoof.𝑅)
+
+nₘ = 21
+𝑅 = BenchmarkExample.SphericalShell.𝑅
+E = BenchmarkExample.SphericalShell.𝐸
+ν = BenchmarkExample.SphericalShell.𝜈
+h = BenchmarkExample.SphericalShell.ℎ
+𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
+𝐹 = BenchmarkExample.SphericalShell.𝐹
 
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
 nᵥ = nₑ*3
-
-s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
-set∇²𝝭!(elements["Ω"])
+eval(prescribeForMix)
+set𝝭!(elements["Ω"])
 set∇²𝝭!(elements["Ωₚ"])
-set∇𝝭!(elements["Γ"])
 set∇𝝭!(elements["Γₚ"])
+set∇𝝭!(elements["Ωₘ"])
+set∇𝝭!(elements["Γₘ"])
 
-eval(prescribleForMix)
-eval(prescribleBoundary)
+prescribe!(elements["Ωₚ"],:𝒂₁₍₁₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[1])
+prescribe!(elements["Ωₚ"],:𝒂₁₍₂₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[2])
+prescribe!(elements["Ωₚ"],:𝒂₁₍₃₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[3])
+prescribe!(elements["Ωₚ"],:𝒂₂₍₁₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[1])
+prescribe!(elements["Ωₚ"],:𝒂₂₍₂₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[2])
+prescribe!(elements["Ωₚ"],:𝒂₂₍₃₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[3])
+prescribe!(elements["Ωₚ"],:𝒂₃₍₁₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(Vec{3}((ξ¹,ξ²,ξ³)))[1])
+prescribe!(elements["Ωₚ"],:𝒂₃₍₂₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(Vec{3}((ξ¹,ξ²,ξ³)))[2])
+prescribe!(elements["Ωₚ"],:𝒂₃₍₃₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₃(Vec{3}((ξ¹,ξ²,ξ³)))[3])
+prescribe!(elements["Ωₚ"],:b₁₁=>(ξ¹,ξ²,ξ³)->cs.b₁₁(Vec{3}((ξ¹,ξ²,ξ³))))
+prescribe!(elements["Ωₚ"],:b₁₂=>(ξ¹,ξ²,ξ³)->cs.b₁₂(Vec{3}((ξ¹,ξ²,ξ³))))
+prescribe!(elements["Ωₚ"],:b₂₂=>(ξ¹,ξ²,ξ³)->cs.b₂₂(Vec{3}((ξ¹,ξ²,ξ³))))
+prescribe!(elements["Γₚ"],:𝒂₁₍₁₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[1])
+prescribe!(elements["Γₚ"],:𝒂₁₍₂₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[2])
+prescribe!(elements["Γₚ"],:𝒂₁₍₃₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₁(Vec{3}((ξ¹,ξ²,ξ³)))[3])
+prescribe!(elements["Γₚ"],:𝒂₂₍₁₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[1])
+prescribe!(elements["Γₚ"],:𝒂₂₍₂₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[2])
+prescribe!(elements["Γₚ"],:𝒂₂₍₃₎=>(ξ¹,ξ²,ξ³)->cs.𝒂₂(Vec{3}((ξ¹,ξ²,ξ³)))[3])
 
-kᴺᴺ = zeros(3*nᵥ,3*nᵥ)
-kᴺᵛ = zeros(3*nᵥ,3*nₚ)
+eval(opsMix)
 
-ops = [
-    Operator{:∫NC⁻¹NdΩ}(:E=>1.0,:ν=>0.0,:h=>0.0),
-    Operator{:∫MC⁻¹MdΩ}(:E=>1.0,:ν=>0.0,:h=>0.0),
-    Operator{:∫𝒏𝑵𝒗dΓ}(),
-    Operator{:∫∇𝑵𝒗dΩ}(),
-    Operator{:∫∇𝑴𝒏𝒂₃𝒗dΓ}(),
-    Operator{:∫𝑴ₙₙ𝜽ₙdΓ}(),
-    Operator{:ΔMₙₛ𝒂₃𝒗}(),
-    Operator{:∫∇𝑴∇𝒂₃𝒗dΩ}()
-]
+kᵋᵋ = zeros(6*nᵥ,6*nᵥ)
+kᴺᵋ = zeros(6*nᵥ,6*nᵥ)
+kᴺᵛ = zeros(6*nᵥ,3*nₚ)
+kᵏᵏ = zeros(9*nᵥ,9*nᵥ)
+kᴹᵏ = zeros(9*nᵥ,9*nᵥ)
+kᴹᵛ = zeros(9*nᵥ,3*nₚ)
 
-ops[1](elements["Ωₚ"],kᴺᴺ)
-ops[3](elements["Γₚ"],elements["Γ"],kᴺᵛ)
-ops[4](elements["Ωₚ"],elements["Ω"],kᴺᵛ)
+ops[1](elements["Ω"],kᵋᵋ)
+ops[2](elements["Ω"],kᴺᵋ)
+# ops[3](elements["Γₚ"],elements["Γₘ"],kᴺᵛ)
+# ops[4](elements["Ωₚ"],elements["Ωₘ"],kᴺᵛ)
+ops[3](elements["Γₚ"][1:3],elements["Γₘ"][1:3],kᴺᵛ)
+ops[4](elements["Ωₚ"][1:1],elements["Ωₘ"][1:1],kᴺᵛ)
 
-# uex(x) = Vec{3}((1.0,1.0,1.0))
-uex(x) = Vec{3}(((x[1]+x[2])^2,(x[1]+x[2])^2,(x[1]+x[2])^2))
+uex(x) = Vec{3}((1.0,1.0,1.0))
+# uex(x) = Vec{3}(((x[1]+x[2])^2,(x[1]+x[2])^2,(x[1]+x[2])^2))
 dᵛ = zeros(3*nₚ)
 for (I,node) in enumerate(nodes)
     x = Vec{3}((node.x,node.y,node.z))
@@ -59,7 +86,7 @@ end
 fᴺ = kᴺᵛ*dᵛ
 
 fᴺ_ = zeros(3*nᵥ)
-for a in elements["Γₚ"]
+for a in elements["Γₚ"][1:3]
     𝓒 = a.𝓒
     𝓖 = a.𝓖
     for ξ in 𝓖
@@ -87,8 +114,8 @@ for a in elements["Γₚ"]
     end
 end
 
-# for a in elements["Ωₚ"][1:1]
-for a in elements["Ωₚ"]
+for a in elements["Ωₚ"][1:1]
+# for a in elements["Ωₚ"]
     𝓒 = a.𝓒
     𝓖 = a.𝓖
     for ξ in 𝓖
@@ -136,4 +163,4 @@ for a in elements["Ωₚ"]
     end
 end
 
-println(norm(fᴺ-fᴺ_))
+# println(norm(fᴺ-fᴺ_))

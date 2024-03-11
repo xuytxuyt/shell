@@ -14,7 +14,8 @@ E = BenchmarkExample.PatchTestThinShell.𝐸
 ν = BenchmarkExample.PatchTestThinShell.𝜈
 h = BenchmarkExample.PatchTestThinShell.ℎ
 
-cs = BenchmarkExample.cylindricalCoordinate(𝑅)
+# cs = BenchmarkExample.cylindricalCoordinate(𝑅)
+cs = BenchmarkExample.sphericalCoordinate(𝑅)
 # cs = BenchmarkExample.cartesianCoordinate()
 
 nₚ = length(nodes)

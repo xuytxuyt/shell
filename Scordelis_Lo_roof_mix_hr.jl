@@ -3,7 +3,7 @@ using ApproxOperator, JLD
 import BenchmarkExample: BenchmarkExample
 include("import_prescrible_ops.jl")
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 16
+ndiv = 28
 elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh");
 
 nₘ = 21

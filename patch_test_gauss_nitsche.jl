@@ -21,7 +21,7 @@ nᵥ = Int(length(elements["Ω"])*3)
 s = 2.5*0.1*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
-n = 2
+n = 1
 u(x) = Vec{3}(((x[1]+2*x[2])^n,(3*x[1]+4*x[2])^n,(5*x[1]+6*x[2])^n))
 vs = BenchmarkExample.PatchTestThinShell.variables(cs,u)
 

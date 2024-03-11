@@ -1,7 +1,7 @@
 using ApproxOperator, JLD
 
 import BenchmarkExample: BenchmarkExample
-
+include("import_prescrible_ops.jl")
 include("import_Scordelis_Lo_roof.jl")
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
@@ -12,20 +12,22 @@ E = BenchmarkExample.ScordelisLoRoof.𝐸
 h = BenchmarkExample.ScordelisLoRoof.ℎ
 cs = BenchmarkExample.cylindricalCoordinate(𝑅)
 
-ndiv = 16
+ndiv = 20
 elements, nodes = import_roof_gauss("msh/scordelislo_"*string(ndiv)*".msh")
 nₚ = length(nodes);
-s = 3.5*𝐿/2/(ndiv-1)*ones(nₚ)
+s = 2.5*𝐿/2/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
+
+eval(prescribeForGauss)
+eval(prescribeVariables)
+eval(prescribeForPenalty)
+eval(prescribeForNitsche)
 
 set∇²𝝭!(elements["Ω"])
 set𝝭!(elements["Γᵇ"])
-set𝝭!(elements["Γʳ"])
 set∇𝝭!(elements["Γᵗ"])
 set∇𝝭!(elements["Γˡ"])
 set𝝭!(elements["𝐴"])
-
-eval(prescribleBoundary)
 
 ops = [
     Operator{:∫εᵢⱼNᵢⱼκᵢⱼMᵢⱼdΩ}(:E=>E,:ν=>ν,:h=>h),
@@ -39,15 +41,24 @@ f = zeros(3*nₚ)
 ops[1](elements["Ω"],k)
 ops[2](elements["Ω"],f)
 
-αᵥ = 1e9
-αᵣ = 1e7
+eval(opsNitsche)
+# opsv[1](elements["Γᵇ"],k,f)
+# opsv[1](elements["Γᵗ"],k,f)
+# opsv[1](elements["Γˡ"],k,f)
+# opsv[2](elements["Γᵇ"],k,f)
+# opsv[2](elements["Γᵗ"],k,f)
+# opsv[2](elements["Γˡ"],k,f)
+# opsv[3](elements["Γᵗ"],k,f)
+# opsv[3](elements["Γˡ"],k,f)
+αᵥ = 1e4
+αᵣ = 1e6
 # for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 #     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 # for (i,αᵥ) in enumerate([1e9])
 #     for (j,αᵣ) in enumerate([1e9])
         opΓ = [
-            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
-            Operator{:∫δθθdΓ}(:α=>αᵣ*E)
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ),
+            Operator{:∫δθθdΓ}(:α=>αᵣ)
         ]
         kᵅ = zeros(3*nₚ,3*nₚ)
         fᵅ = zeros(3*nₚ)

@@ -13,14 +13,14 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 
-ndiv = 32
+ndiv = 24
 elements, nodes = import_spherical_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 eval(prescribeForGauss)
-eval(prescribeForPenalty)
+eval(prescribeForNitsche)
 eval(prescribeVariables)
 eval(opsGauss)
 
@@ -49,12 +49,22 @@ for (i,xᵢ) in enumerate(𝓒)
     kᴳ[3*I] = -N[i]*1e5*E
 end
 
+eval(opsNitsche)
+# kᵛ = zeros(3*nₚ,3*nₚ)
+# fᵛ = zeros(3*nₚ)
+opsv[1](elements["Γʳ"],k,f)
+opsv[1](elements["Γˡ"],k,f)
+opsv[2](elements["Γʳ"],k,f)
+opsv[2](elements["Γˡ"],k,f)
+opsv[3](elements["Γʳ"],k,f)
+opsv[3](elements["Γˡ"],k,f)
+
 # for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 #     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 # for (i,αᵥ) in enumerate([1e9])
 #     for (j,αᵣ) in enumerate([1e5])
-αᵥ = 1e9
-αᵣ = 1e7
+αᵥ = 1e5
+αᵣ = 1e3
         opΓ = [
             Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
             Operator{:∫δθθdΓ}(:α=>αᵣ*E)

@@ -122,8 +122,8 @@ for (I,ξ¹) in enumerate(LinRange(0.0, 𝜃*𝑅, ind))
         xs[I,J] = 𝑅*sin(ξ¹/𝑅)
         ys[I,J] = ξ²
         zs[I,J] = 𝑅*cos(ξ¹/𝑅)
-        # cs[I,J] = 𝑴ex[3]
-        cs[I,J] = 𝑴[3]
+        cs[I,J] = 𝑴ex[3]
+        # cs[I,J] = 𝑴[3]
     end
 end
 # colorrange1 = (0.0,9.0)
@@ -151,6 +151,6 @@ for elm in elements["∂Ω"]
     lines!(x,y,z,linewidth = 1.5, color = :black)
 end
 
-save("./png/"*filename*".png",fig)
-# save("./png/patchtest_exact.png",fig)
+# save("./png/"*filename*".png",fig)
+save("./png/patchtest_exact.png",fig)
 fig

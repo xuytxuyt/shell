@@ -63,7 +63,7 @@ ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 kᵇ = - kᴺᵋ\kᴺᵛ
 kᵐ = - kᴹᵏ\kᴹᵛ
 
-n = 2
+n = 1
 uex(x) = Vec{3}(((x[1]+2*x[2])^n,(3*x[1]+4*x[2])^n,(5*x[1]+6*x[2])^n))
 ∂uex(x) = gradient(uex,x)
 ∂²uex(x) = gradient(∂uex,x)

@@ -2,58 +2,6 @@
 using Tensors, BenchmarkExample
 import Gmsh: gmsh
 
-const lobatto3 = ([-1.0,0.0,0.0,
-                    0.0,0.0,0.0,
-                    1.0,0.0,0.0],[1/3,4/3,1/3])
-
-const lobatto5 = ([-1.0,0.0,0.0,
-                   -(3/7)^0.5,0.0,0.0,
-                    0.0,0.0,0.0,
-                    (3/7)^0.5,0.0,0.0,
-                    1.0,0.0,0.0],[1/10,49/90,32/45,49/90,1/10])
-
-const lobatto7 = ([-1.0,0.0,0.0,
-                   -(5/11+2/11*(5/3)^0.5)^0.5,0.0,0.0,
-                   -(5/11-2/11*(5/3)^0.5)^0.5,0.0,0.0,
-                    0.0,0.0,0.0,
-                    (5/11-2/11*(5/3)^0.5)^0.5,0.0,0.0,
-                    (5/11+2/11*(5/3)^0.5)^0.5,0.0,0.0,
-                    1.0,0.0,0.0],
-                  [1/21,
-                   (124-7*15^0.5)/350,
-                   (124+7*15^0.5)/350,
-                   256/525,
-                   (124+7*15^0.5)/350,
-                   (124-7*15^0.5)/350,
-                   1/21])
-
-const trilobatto13 = ([1.0000000000000000,0.0000000000000000,0.0,
-                       0.0000000000000000,1.0000000000000000,0.0,
-                       0.0000000000000000,0.0000000000000000,0.0,
-                       0.0000000000000000,0.5000000000000000,0.0,
-                       0.5000000000000000,0.0000000000000000,0.0,
-                       0.5000000000000000,0.5000000000000000,0.0,
-                       0.0000000000000000,0.8273268353539885,0.0,
-                       0.0000000000000000,0.1726731646460114,0.0,
-                       0.1726731646460114,0.0000000000000000,0.0,
-                       0.8273268353539885,0.0000000000000000,0.0,
-                       0.8273268353539885,0.1726731646460114,0.0,
-                       0.1726731646460114,0.8273268353539885,0.0,
-                       0.3333333333333333,0.3333333333333333,0.0],
-                   0.5*[-0.0277777777777778,
-                        -0.0277777777777778,
-                        -0.0277777777777778,
-                         0.0296296296296297,
-                         0.0296296296296297,
-                         0.0296296296296297,
-                         0.0907407407407407,
-                         0.0907407407407407,
-                         0.0907407407407407,
-                         0.0907407407407407,
-                         0.0907407407407407,
-                         0.0907407407407407,
-                         0.4500000000000000])
-
 function import_spherical_gauss(filename::String)
     gmsh.initialize()
     gmsh.open(filename)
@@ -65,7 +13,7 @@ function import_spherical_gauss(filename::String)
     x = nodes.x
     y = nodes.y
     z = nodes.z
-    sp = RegularGrid(x,y,z,n = 3,γ = 5)
+    sp = RegularGrid(x,y,z,n = 2,γ = 6)
     cs = BenchmarkExample.sphericalCoordinate(BenchmarkExample.SphericalShell.𝑅)
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
     elements["Ω"] = getCurvedElements(nodes, entities["Ω"], type, cs, integrationOrder, sp)
@@ -89,11 +37,11 @@ function import_spherical_mix(filename::String)
     x = nodes.x
     y = nodes.y
     z = nodes.z
-    sp = RegularGrid(x,y,z,n = 3,γ = 5)
+    sp = RegularGrid(x,y,z,n = 2,γ = 6)
     cs = BenchmarkExample.sphericalCoordinate(BenchmarkExample.SphericalShell.𝑅)
     elements = Dict{String,Vector{ApproxOperator.AbstractElement}}()
 
-    integrationOrder= 2
+    integrationOrder= 8
     elements["Ω"] = getCurvedPiecewiseElements(entities["Ω"], PiecewisePolynomial{:Linear2D}, cs, integrationOrder)
 
     integrationScheme = trilobatto3
@@ -375,7 +323,7 @@ prescribeVariables = quote
             ξ.∂ₙu₃ = 0.0
         end
     end
-    prescribe!(elements["𝐴"],:t₁=>(ξ¹,ξ²,ξ³)->2.0)
+    prescribe!(elements["𝐴"],:t₁=>(ξ¹,ξ²,ξ³)->1.0)
     prescribe!(elements["𝐴"],:t₂=>(ξ¹,ξ²,ξ³)->0.0)
     prescribe!(elements["𝐴"],:t₃=>(ξ¹,ξ²,ξ³)->0.0)
     prescribe!(elements["𝐴"],:g₁=>(ξ¹,ξ²,ξ³)->0.0)
@@ -388,7 +336,7 @@ prescribeVariables = quote
     prescribe!(elements["𝐴"],:n₂₃=>(ξ¹,ξ²,ξ³)->0.0)
     prescribe!(elements["𝐴"],:n₃₃=>(ξ¹,ξ²,ξ³)->1.0)
     prescribe!(elements["𝐵"],:t₁=>(ξ¹,ξ²,ξ³)->0.0)
-    prescribe!(elements["𝐵"],:t₂=>(ξ¹,ξ²,ξ³)->-2.0)
+    prescribe!(elements["𝐵"],:t₂=>(ξ¹,ξ²,ξ³)->-1.0)
     prescribe!(elements["𝐵"],:t₃=>(ξ¹,ξ²,ξ³)->0.0)
 
     push!(elements["𝐴"], :𝝭=>:𝑠)

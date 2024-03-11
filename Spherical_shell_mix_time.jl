@@ -1,12 +1,11 @@
-using ApproxOperator, JLD
+using ApproxOperator, JLD, TimerOutputs
 const to = TimerOutput()
 import BenchmarkExample: BenchmarkExample
 include("import_prescrible_ops.jl")
 include("import_Spherical_shell.jl")
-ndiv = 8
-elements, nodes = import_spherical_mix("msh/sphericalshell_"*string(ndiv)*".msh");
 
-nₘ = 21
+ndiv = 8
+nₘ = 55
 𝑅 = BenchmarkExample.SphericalShell.𝑅
 E = BenchmarkExample.SphericalShell.𝐸
 ν = BenchmarkExample.SphericalShell.𝜈
@@ -15,6 +14,24 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝐹 = BenchmarkExample.SphericalShell.𝐹
 
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
+
+elements, nodes = import_spherical_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
+nₚ = length(nodes)
+nᵥ = Int(length(elements["Ω"])*3)
+# s = 2.26*𝑅*𝜃/(ndiv-1)*ones(nₚ)
+s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
+push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
+eval(prescribeForGauss)
+@timeit to "shape gauss" begin
+set∇²𝝭!(elements["Ω"])
+end
+eval(opsGauss)
+k = zeros(3*nₚ,3*nₚ)
+@timeit to "Gauss" begin
+op(elements["Ω"],k)
+end
+elements, nodes = import_spherical_mix("msh/sphericalshell_"*string(ndiv)*".msh");
+
 nₚ = length(nodes)
 nᵥ = Int(length(elements["Ω"])*3)
 # s = 2.26*𝑅*𝜃/(ndiv-1)*ones(nₚ)
@@ -22,6 +39,7 @@ s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 eval(prescribeForMix)
+eval(prescribeForNitsche)
 eval(prescribeForPenalty)
 eval(prescribeVariables)
 
@@ -29,18 +47,27 @@ set𝝭!(elements["Ω"])
 set∇²𝝭!(elements["Ωₚ"])
 set∇𝝭!(elements["Γₚ"])
 set∇𝝭!(elements["Ωₘ"])
+@timeit to "shape mix" begin
 set∇𝝭!(elements["Γₘ"])
+end
+
+@timeit to "shape HR" begin
 set∇𝝭!(elements["Γʳ"])
 set∇𝝭!(elements["Γˡ"])
-set𝝭!(elements["𝐴"])
-set𝝭!(elements["𝐵"])
+end
 
-opForce = Operator{:∫vᵢtᵢdΓ}()
-f = zeros(3*nₚ)
-opForce(elements["𝐴"],f)
-opForce(elements["𝐵"],f)
+@timeit to "shape nitsche" begin
+set∇̂³𝝭!(elements["Γʳ"])
+set∇̂³𝝭!(elements["Γˡ"])
+set∇𝝭!(elements["Γʳ"])
+set∇𝝭!(elements["Γˡ"])
+end
 
-eval(opsMix)
+@timeit to "shape penalty" begin
+set∇𝝭!(elements["Γʳ"])
+set∇𝝭!(elements["Γˡ"])
+end
+
 
 kᵋᵋ = zeros(6*nᵥ,6*nᵥ)
 kᴺᵋ = zeros(6*nᵥ,6*nᵥ)
@@ -49,6 +76,8 @@ kᵏᵏ = zeros(9*nᵥ,9*nᵥ)
 kᴹᵏ = zeros(9*nᵥ,9*nᵥ)
 kᴹᵛ = zeros(9*nᵥ,3*nₚ)
 
+eval(opsMix)
+@timeit to "RKGSI" begin
 ops[1](elements["Ω"],kᵋᵋ)
 ops[2](elements["Ω"],kᴺᵋ)
 ops[3](elements["Γₚ"],elements["Γₘ"],kᴺᵛ)
@@ -61,48 +90,45 @@ ops[8](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[9](elements["Γₚ"],elements["Γₘ"],kᴹᵛ)
 ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 
+end
+kᵋᵛ = kᴺᵋ\kᴺᵛ
+kᵏᵛ = kᴹᵏ\kᴹᵛ
+k = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
+
 eval(opsHR)
 fᴺ = zeros(6*nᵥ)
 fᴹ = zeros(9*nᵥ)
+@timeit to "HR" begin
 opsh[1](elements["Γʳₚ"],elements["Γʳ"],kᴺᵛ,fᴺ)
 opsh[1](elements["Γˡₚ"],elements["Γˡ"],kᴺᵛ,fᴺ)
 opsh[2](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
 opsh[2](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
 opsh[3](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
 opsh[3](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
-
-# αᵥ = 1e7*E
-# αᵣ = 1e3*E
-# eval(opsPenalty)
-# kᵅ = zeros(3*nₚ,3*nₚ)
-# fᵅ = zeros(3*nₚ)
-# opsα[1](elements["Γˡ"],kᵅ,fᵅ)
-# opsα[1](elements["Γʳ"],kᵅ,fᵅ)
-# opsα[2](elements["Γˡ"],kᵅ,fᵅ)
-# opsα[2](elements["Γʳ"],kᵅ,fᵅ)
-
-# opsα[1](elements["𝐴"],kᵅ,fᵅ)
-kᴳ = zeros(3*nₚ)
-ξ = elements["𝐴"][1].𝓖[1]
-𝓒 = elements["𝐴"][1].𝓒
-N = ξ[:𝝭]
-for (i,xᵢ) in enumerate(𝓒)
-    I = xᵢ.𝐼
-    kᴳ[3*I] = -N[i]*1e0*E
+kᵋᵛ'*kᵋᵋ*(kᴺᵋ\fᴺ) + kᵏᵛ'*kᵏᵏ*(kᴹᵏ\fᴹ)
 end
 
-kᵋᵛ = kᴺᵋ\kᴺᵛ
-kᵏᵛ = kᴹᵏ\kᴹᵛ
-k = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
-d = [k kᴳ;kᴳ' 0]\[-f;0]
+eval(opsNitsche)
+kᵛ = zeros(3*nₚ,3*nₚ)
+fᵛ = zeros(3*nₚ)
+@timeit to "Nitsche" begin
+opsv[1](elements["Γʳ"],kᵛ,fᵛ)
+opsv[1](elements["Γˡ"],kᵛ,fᵛ)
+opsv[2](elements["Γʳ"],kᵛ,fᵛ)
+opsv[2](elements["Γˡ"],kᵛ,fᵛ)
+opsv[3](elements["Γʳ"],kᵛ,fᵛ)
+opsv[3](elements["Γˡ"],kᵛ,fᵛ)
+end
 
-d₁ = d[1:3:3*nₚ]
-d₂ = d[2:3:3*nₚ]
-d₃ = d[3:3:3*nₚ]
-
-op𝐴 = Operator{:SphericalShell_𝐴}()
-push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-w = op𝐴(elements["𝐴"])
-
-println(w)
-@save compress=true "jld/spherical_shell_mix_hr_"*string(ndiv)*".jld" d₁ d₂ d₃
+αᵥ = 1.0
+αᵣ = 1.0
+eval(opsPenalty)
+kᵅ = zeros(3*nₚ,3*nₚ)
+fᵅ = zeros(3*nₚ)
+@timeit to "Penalty" begin
+opsα[1](elements["Γʳ"],kᵅ,fᵅ)
+opsα[1](elements["Γˡ"],kᵅ,fᵅ)
+opsα[2](elements["Γʳ"],kᵅ,fᵅ)
+opsα[2](elements["Γˡ"],kᵅ,fᵅ)
+end
+show(to)

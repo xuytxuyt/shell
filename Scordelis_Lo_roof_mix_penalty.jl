@@ -3,7 +3,7 @@ using ApproxOperator, JLD, XLSX
 import BenchmarkExample: BenchmarkExample
 include("import_prescrible_ops.jl")
 include("import_Scordelis_Lo_roof.jl")
-ndiv = 32
+ndiv = 28
 elements, nodes = import_roof_mix("msh/scordelislo_"*string(ndiv)*".msh");
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
@@ -73,12 +73,12 @@ fᵅ = zeros(3*nₚ)
 k_ = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
 f_ = -f
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-index = [8,16,24,32]
+index = [8,16,24,32,20,28]
 for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
         opsα = [
-            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
-            Operator{:∫δθθdΓ}(:α=>αᵣ*E),
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ),
+            Operator{:∫δθθdΓ}(:α=>αᵣ),
         ]
         fill!(kᵅ,0.0)
         fill!(fᵅ,0.0)

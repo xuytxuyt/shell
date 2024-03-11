@@ -1,5 +1,5 @@
 using ApproxOperator, JLD
-const to = TimerOutput()
+
 import BenchmarkExample: BenchmarkExample
 include("import_prescrible_ops.jl")
 include("import_Spherical_shell.jl")
@@ -17,7 +17,6 @@ h = BenchmarkExample.SphericalShell.ℎ
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 nₚ = length(nodes)
 nᵥ = Int(length(elements["Ω"])*3)
-# s = 2.26*𝑅*𝜃/(ndiv-1)*ones(nₚ)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
@@ -64,37 +63,33 @@ ops[10](elements["Ωₚ"],elements["Ωₘ"],kᴹᵛ)
 eval(opsHR)
 fᴺ = zeros(6*nᵥ)
 fᴹ = zeros(9*nᵥ)
-opsh[1](elements["Γʳₚ"],elements["Γʳ"],kᴺᵛ,fᴺ)
-opsh[1](elements["Γˡₚ"],elements["Γˡ"],kᴺᵛ,fᴺ)
-opsh[2](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
-opsh[2](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
-opsh[3](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
-opsh[3](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
+# opsh[1](elements["Γʳₚ"],elements["Γʳ"],kᴺᵛ,fᴺ)
+# opsh[1](elements["Γˡₚ"],elements["Γˡ"],kᴺᵛ,fᴺ)
+# opsh[2](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
+# opsh[2](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
+# opsh[3](elements["Γʳₚ"],elements["Γʳ"],kᴹᵛ,fᴹ)
+# opsh[3](elements["Γˡₚ"],elements["Γˡ"],kᴹᵛ,fᴹ)
 
-# αᵥ = 1e7*E
-# αᵣ = 1e3*E
-# eval(opsPenalty)
+αᵥ = 1e9
+αᵣ = 1e7
+eval(opsPenalty)
+eval(prescribeForPenalty)
+kᵅ = zeros(3*nₚ,3*nₚ)
+fᵅ = zeros(3*nₚ)
+opsα[1](elements["Γˡ"],kᵅ,fᵅ)
+opsα[1](elements["Γʳ"],kᵅ,fᵅ)
+opsα[2](elements["Γˡ"],kᵅ,fᵅ)
+opsα[2](elements["Γʳ"],kᵅ,fᵅ)
+
+# opα = Operator{:∫vᵢgᵢdΓ}(:α=>1e8*E)
 # kᵅ = zeros(3*nₚ,3*nₚ)
 # fᵅ = zeros(3*nₚ)
-# opsα[1](elements["Γˡ"],kᵅ,fᵅ)
-# opsα[1](elements["Γʳ"],kᵅ,fᵅ)
-# opsα[2](elements["Γˡ"],kᵅ,fᵅ)
-# opsα[2](elements["Γʳ"],kᵅ,fᵅ)
-
-# opsα[1](elements["𝐴"],kᵅ,fᵅ)
-kᴳ = zeros(3*nₚ)
-ξ = elements["𝐴"][1].𝓖[1]
-𝓒 = elements["𝐴"][1].𝓒
-N = ξ[:𝝭]
-for (i,xᵢ) in enumerate(𝓒)
-    I = xᵢ.𝐼
-    kᴳ[3*I] = -N[i]*1e0*E
-end
+opsα[1](elements["𝐴"],kᵅ,fᵅ)
 
 kᵋᵛ = kᴺᵋ\kᴺᵛ
 kᵏᵛ = kᴹᵏ\kᴹᵛ
-k = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ
-d = [k kᴳ;kᴳ' 0]\[-f;0]
+# d = (kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ - kᵅ)\(-f -fᵅ + kᵋᵛ'*kᵋᵋ*(kᴺᵋ\fᴺ) + kᵏᵛ'*kᵏᵏ*(kᴹᵏ\fᴹ))
+d = (kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ + kᵅ)\(-f +fᵅ)
 
 d₁ = d[1:3:3*nₚ]
 d₂ = d[2:3:3*nₚ]

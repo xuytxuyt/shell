@@ -6,7 +6,7 @@ import Gmsh: gmsh
 
 𝑅 = BenchmarkExample.ScordelisLoRoof.𝑅
 
-ndiv = 8
+ndiv = 28
 gmsh.initialize()
 gmsh.open("./msh/scordelislo_"*string(ndiv)*".msh")
 entities = getPhysicalGroups()
@@ -61,7 +61,7 @@ z = [𝑅*cos(ξ/𝑅) for ξ in ξ¹]
 ps = Point3f.(x,y,z)
 scatter!(ps, 
     marker=:circle,
-    markersize = 6,
+    markersize = 5,
     color = :black
 )
 
