@@ -33,7 +33,10 @@ push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 type = ReproducingKernel{:Cubic2D,:□,:CubicSpline}
 𝗠 = zeros(55)
 h = 5
-ds = Dict(load("jld/TADAS_hr_12.jld"))
+# ds = Dict(load("jld/TADAS_hr_12.jld"))
+ds = Dict(load("jld/TADAS_penalty_12.jld"))
+# ds = Dict(load("jld/TADAS_nitsche_12.jld"))
+# ds = Dict(load("jld/TADAS_gauss_nitsche_12.jld"))
 push!(nodes,:d=>ds["d"])
 
 ind = 21
@@ -61,6 +64,8 @@ ys3s = zeros(ind,ind)
 zs3s = zeros(ind,ind)
 ys3x = zeros(ind,ind)
 zs3x = zeros(ind,ind)
+z = zeros(ind,ind)
+y = zeros(ind,ind)
 xl₁ = zeros(ind)
 yl₁ = zeros(ind)
 zl = zeros(ind)
@@ -187,6 +192,8 @@ for (I,ξ¹) in enumerate(LinRange(0.0,120, ind))
            yl3ₓ[J] = ys1x[ind,J]
            zl3ₓ[J] = zs1x[ind,J]
     end
+    z[I] =zs1[10,10] 
+    y[I] =ys1[I,1] 
     xl₁[I] = ξ¹
     yl₁[I] = 0
     zl[I] = 0
@@ -311,10 +318,14 @@ for i in 1:ind
         ys3[i,j] = y₃
         zs3[i,j] = α*u₃
         cs3[i,j] = u₃
-        ys3s[i,j] = y₃+α*u₃/(360.1-y₃)*h
+        ys3s[i,j] = y₃+α*u₃/(360-y₃)*h
         zs3s[i,j] = α*u₃+5
-        ys3x[i,j] = y₃-α*u₃/(360.1-y₃)*h
+        ys3x[i,j] = y₃-α*u₃/(360-y₃)*h
         zs3x[i,j] = α*u₃-5
+        ys3s[1,j] = 360
+        zs3s[1,j] = 5
+        ys3x[1,j] = 360
+        zs3x[1,j] = -5
         xl₈[i]=60+(-0.2*(i-1)Δy+71)
         yl₈[i]=y₃
         xl₉[i]=60-(-0.2*(i-1)Δy+71)
@@ -324,6 +335,7 @@ for i in 1:ind
         yl10ₓ[j] = ys3x[1,j]
         zl10ₓ[j] = zs3x[1,j]   
     end
+
     for (i,x) in enumerate(LinRange(-11,131, ind))
         xl₁₀[i]=x
         yl₁₀[i]=360
@@ -372,25 +384,25 @@ ax = Axis3(fig[1, 1], aspect = :data, azimuth = -0.25*pi, elevation = 0.10*pi)
 
 hidespines!(ax)
 hidedecorations!(ax)
-s = surface!(ax,zs1,xs1,ys1, color=cs1, colormap=:redsblues, colorrange = (-0.11,0))
+s = surface!(ax,zs1,xs1,ys1, color=cs1, colormap=:haline, colorrange = (-0.11,0))
 # s = surface!(ax,xs1s,ys1s,zs1s, color=cs1, colormap=:redsblues, colorrange = (-0.11,0))
 # s = surface!(ax,xs1x,ys1x,zs1x, color=cs1, colormap=:redsblues, colorrange = (-0.11,0))
-s = surface!(ax,zs2,xs2,ys2, color=cs2, colormap=:redsblues, colorrange = (-0.11,0))
+s = surface!(ax,zs2,xs2,ys2, color=cs2, colormap=:haline, colorrange = (-0.11,0))
 # s = surface!(ax,xs2s,ys2s,zs2s, color=cs2, colormap=:redsblues, colorrange = (-0.11,0))
 # s = surface!(ax,xs2x,ys2x,zs2x, color=cs2, colormap=:redsblues, colorrange = (-0.11,0))
-s = surface!(ax,zs3,xs3,ys3, color=cs3, colormap=:redsblues, colorrange = (-0.11,0))
+s = surface!(ax,zs3,xs3,ys3, color=cs3, colormap=:haline, colorrange = (-0.11,0))
 # s = surface!(ax,xs3s,ys3s,zs3s, color=cs3, colormap=:redsblues, colorrange = (-0.11,0))
 # s = surface!(ax,xs3x,ys3x,zs3x, color=cs3, colormap=:redsblues, colorrange = (-0.11,0))
-lines!(ax,zl,xl₁,yl₁,color=:purple)
-lines!(ax,zl,xl₂,yl₂,color=:purple)
-lines!(ax,zl,xl₃,yl₃,color=:purple)
-lines!(ax,zl,xl₄,yl₄,color=:purple)
-lines!(ax,zl,xl₅,yl₅,color=:purple)
-lines!(ax,zl,xl₆,yl₆,color=:purple)
-lines!(ax,zl,xl₇,yl₇,color=:purple)
-lines!(ax,zl,xl₈,yl₈,color=:purple)
-lines!(ax,zl,xl₉,yl₉,color=:purple)
-lines!(ax,zl,xl₁₀,yl₁₀,color=:purple)
+lines!(ax,zl,xl₁,yl₁,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₂,yl₂,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₃,yl₃,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₄,yl₄,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₅,yl₅,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₆,yl₆,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₇,yl₇,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₈,yl₈,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₉,yl₉,color=:black,linestyle = :dash)
+lines!(ax,zl,xl₁₀,yl₁₀,color=:black,linestyle = :dash)
 lines!(ax,zl1ₛ,xl₁,yl1ₛ,color=:gray)
 lines!(ax,zl1ₓ,xl₁,yl1ₓ,color=:gray)
 lines!(ax,zl2ₛ,xl₂,yl2ₛ,color=:gray)
@@ -422,6 +434,10 @@ lines!(ax,zld8,xld8,yld8,color=:gray)
 lines!(ax,zld9,xld9,yld9,color=:gray)
 lines!(ax,zld10,xld10,yld10,color=:gray)
 
-Colorbar(fig[2, 1], s, vertical = false)
 
+Colorbar(fig[1, 2],s)
+# save("./png/TADAS_gauss_nitsche_12.png",fig)
+# save("./png/TADAS_nitsche_12.png",fig)
+# save("./png/TADAS_hr_12.png",fig)
+save("./png/TADAS_penalty_12.png",fig)
 fig
