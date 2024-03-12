@@ -118,6 +118,7 @@ function import_roof_mix(filename::String)
 end
 
 prescribeForGauss = quote
+    nₘ = 55
     𝗠 = (0,zeros(nₘ))
     ∂𝗠∂x = (0,zeros(nₘ))
     ∂𝗠∂y = (0,zeros(nₘ))
