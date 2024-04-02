@@ -13,7 +13,7 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 
-ndiv = 24
+ndiv = 32
 elements, nodes = import_spherical_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)

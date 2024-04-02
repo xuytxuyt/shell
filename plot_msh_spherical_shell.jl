@@ -6,7 +6,7 @@ import Gmsh: gmsh
 
 𝑅 = BenchmarkExample.SphericalShell.𝑅
 
-ndiv = 32
+ndiv = 40
 gmsh.initialize()
 gmsh.open("./msh/sphericalshell_"*string(ndiv)*".msh")
 entities = getPhysicalGroups()

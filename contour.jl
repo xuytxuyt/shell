@@ -157,15 +157,23 @@ for (I,ξ¹) in enumerate(LinRange(0.0,120, ind))
     for (J,ξ²) in enumerate(LinRange(0.0, 30, ind))
         indices = sp(ξ¹,ξ²,0.0)
         N = zeros(length(indices))
-        data = Dict([:x=>(2,[ξ¹]),:y=>(2,[ξ²]),:z=>(2,[0.0]),:𝝭=>(4,N),:𝗠=>(0,𝗠)])
+        B₁ = zeros(length(indices))
+        B₂ = zeros(length(indices))
+        B₁₁ = zeros(length(indices))
+        B₂₂ = zeros(length(indices))
+        B₁₂ = zeros(length(indices))
+        data = Dict([:x=>(2,[ξ¹]),:y=>(2,[ξ²]),:z=>(2,[0.0]),:𝝭=>(4,N),:∂𝝭∂x=>(4,B₁),:𝝭=>(4,N),:𝝭=>(4,N),:𝗠=>(0,𝗠)])
         𝓒 = [nodes[k] for k in indices]
         𝓖 = [𝑿ₛ((𝑔=1,𝐺=1,𝐶=1,𝑠=0),data)]
         ap = type(𝓒,𝓖)
-        set𝝭!(ap)
+        # set𝝭!(ap)
+        set∇²𝝭!(ap)
         u₃ = 0.0
         for (i,xᵢ) in enumerate(𝓒)
             u₃ += N[i]*xᵢ.d
+            κ₁₁ += - B₁₁[i]*xᵢ.d
         end
+        M₁₁ = ?
            xs1[I,J] = ξ¹
            ys1[I,J] = ξ²
            zs1[I,J] = α*u₃

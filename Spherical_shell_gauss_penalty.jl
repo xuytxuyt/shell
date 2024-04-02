@@ -13,7 +13,7 @@ h = BenchmarkExample.SphericalShell.ℎ
 𝜃 =  BenchmarkExample.SphericalShell.𝜃₂
 cs = BenchmarkExample.sphericalCoordinate(𝑅)
 
-ndiv = 32
+ndiv = 40
 elements, nodes = import_spherical_gauss("msh/sphericalshell_"*string(ndiv)*".msh");
 nₚ = length(nodes)
 s = 2.5*𝑅*𝜃/(ndiv-1)*ones(nₚ)
@@ -53,7 +53,7 @@ end
 #     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 # for (i,αᵥ) in enumerate([1e9])
 #     for (j,αᵣ) in enumerate([1e5])
-αᵥ = 1e9
+αᵥ = 1e12
 αᵣ = 1e7
         opΓ = [
             Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),

@@ -3,7 +3,7 @@ using ApproxOperator, JLD
 import BenchmarkExample: BenchmarkExample, XLSX
 include("import_prescrible_ops.jl")
 include("import_Spherical_shell.jl")
-ndiv = 32
+ndiv = 40
 elements, nodes = import_spherical_mix("msh/sphericalshell_"*string(ndiv)*".msh");
 
 nₘ = 21
