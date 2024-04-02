@@ -79,6 +79,7 @@ opsPenalty = quote
     opsα = [
         Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ*E),
         Operator{:∫δθθdΓ}(:α=>αᵣ*E),
+        Operator{:∫𝒂ᵢvᵢgᵢdΓ}(:α₁=>αᵥ*E,:α₂=>αᵥ*E),
     ]
 end
 

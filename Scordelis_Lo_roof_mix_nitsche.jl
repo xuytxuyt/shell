@@ -88,16 +88,19 @@ fᵅ = zeros(3*nₚ)
 k_ = kᵋᵛ'*kᵋᵋ*kᵋᵛ + kᵏᵛ'*kᵏᵏ*kᵏᵛ - kᵛ
 f_ = -f - fᵛ
 push!(nodes,:d₁=>d₁,:d₂=>d₂,:d₃=>d₃)
-index = [8,16,24,32,20,28]
+index = [16,20,24,28]
 for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+        # αᵥ = 0
+        # αᵣ = 0
         opsα = [
-            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ),
-            Operator{:∫δθθdΓ}(:α=>αᵣ),
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ/h),
+            Operator{:∫δθθdΓ}(:α=>αᵣ/h),
+            Operator{:∫𝒂ᵢvᵢgᵢdΓ}(:α₁=>αᵥ/h,:α₂=>αᵣ/h^3),
         ]
         fill!(kᵅ,0.0)
         fill!(fᵅ,0.0)
-        opsα[1](elements["Γᵇ"],kᵅ,fᵅ)
+        opsα[3](elements["Γᵇ"],kᵅ,fᵅ)
         opsα[1](elements["Γᵗ"],kᵅ,fᵅ)
         opsα[1](elements["Γˡ"],kᵅ,fᵅ)
         opsα[2](elements["Γᵗ"],kᵅ,fᵅ)
@@ -110,13 +113,13 @@ for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e
         d₃ .= d[3:3:3*nₚ]
 
         w = op𝐴(elements["𝐴"])
-        println(17*(i-1)+j)
+        # println(17*(i-1)+j)
         println(w)
 
-        XLSX.openxlsx("./xlsx/scordelis_lo_roof_nitsche_alpha.xlsx", mode="rw") do xf
+        XLSX.openxlsx("./xlsx/scordelis_lo_roof_penalty_alpha_i.xlsx", mode="rw") do xf
             ind = findfirst((x)->x==ndiv,index)
             𝐿₂_row = Char(64+j)*string(i)
-            xf[ind][𝐿₂_row] = w
+            xf[ind+4][𝐿₂_row] = w
         end
     end
 end

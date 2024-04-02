@@ -1,4 +1,4 @@
-using ApproxOperator, JLD
+using ApproxOperator, JLD, XLSX
 
 import BenchmarkExample: BenchmarkExample
 include("import_prescrible_ops.jl")
@@ -50,19 +50,22 @@ eval(opsNitsche)
 # opsv[2](elements["Γˡ"],k,f)
 # opsv[3](elements["Γᵗ"],k,f)
 # opsv[3](elements["Γˡ"],k,f)
-αᵥ = 1e4
-αᵣ = 1e6
-# for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
-#     for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+# αᵥ = 1e4
+# αᵣ = 1e6
+index = [8,16,24,32,20,28]
+for (i,αᵥ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
+    for (j,αᵣ) in enumerate([1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,1e10,1e11,1e12,1e13,1e14,1e15,1e16])
 # for (i,αᵥ) in enumerate([1e9])
 #     for (j,αᵣ) in enumerate([1e9])
         opΓ = [
-            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ),
-            Operator{:∫δθθdΓ}(:α=>αᵣ)
+            Operator{:∫vᵢgᵢdΓ}(:α=>αᵥ/h),
+            Operator{:∫δθθdΓ}(:α=>αᵣ/h),
+            Operator{:∫𝒂ᵢvᵢgᵢdΓ}(:α₁=>αᵥ/h,:α₂=>αᵣ/h^3),
         ]
         kᵅ = zeros(3*nₚ,3*nₚ)
         fᵅ = zeros(3*nₚ)
-        opΓ[1](elements["Γᵇ"],kᵅ,fᵅ)
+        # opΓ[1](elements["Γᵇ"],kᵅ,fᵅ)
+        opΓ[3](elements["Γᵇ"],kᵅ,fᵅ)
         opΓ[1](elements["Γᵗ"],kᵅ,fᵅ)
         opΓ[1](elements["Γˡ"],kᵅ,fᵅ)
         opΓ[2](elements["Γᵗ"],kᵅ,fᵅ)
@@ -77,6 +80,11 @@ eval(opsNitsche)
         w = ops[3](elements["𝐴"])
 
         println(w)
-        @save compress=true "jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
-#     end
-# end
+        # @save compress=true "jld/scordelislo_gauss_penalty_"*string(ndiv)*".jld" d₁ d₂ d₃
+        XLSX.openxlsx("./xlsx/scordelis_lo_roof_penalty_alpha_i.xlsx", mode="rw") do xf
+            ind = findfirst((x)->x==ndiv,index)
+            𝐿₂_row = Char(64+j)*string(i)
+            xf[ind][𝐿₂_row] = w
+        end
+    end
+end
